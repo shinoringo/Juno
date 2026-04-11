@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Bar Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080608;--sur:#0e0c0f;--dp:#16121a;--panel:#1e1825;--rim:#2e2636;
+  --muted:#4a3f58;--soft:#8a7a9a;--text:#ede8f5;
+  --amber:#d4a843;--gold:#f0c060;--ember:#c05030;--rose:#e07060;
+  --sage:#5a9970;--plum:#9b72b0;--blue:#5588cc;--r:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+#sb{width:210px;flex-shrink:0;background:var(--sur);border-right:1px solid var(--rim);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{padding:20px 18px 14px;border-bottom:1px solid var(--rim)}
+.sb-logo h1{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--amber)}
+.sb-logo p{font-size:.65rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.sb-nav{padding:10px 8px;flex:1}
+.sb-sec{font-size:.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:8px 10px 3px}
+.sb-btn{display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border-radius:10px;border:none;background:none;color:var(--soft);cursor:pointer;text-align:left;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.85rem;transition:all .2s;margin-bottom:2px}
+.sb-btn:hover{background:var(--muted);color:var(--text)}
+.sb-btn.on{background:rgba(212,168,67,.12);color:var(--amber)}
+.sb-btn .ic{font-size:.95rem;width:18px;text-align:center}
+.sb-foot{padding:14px;border-top:1px solid var(--rim);font-size:.72rem;color:var(--muted)}
+.sb-stat{color:var(--amber);margin-top:3px}
+
+/* MAIN */
+#main{flex:1;overflow-y:auto;min-width:0}
+.pg{display:none;padding:24px}
+.pg.on{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.pt{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--amber);font-weight:700}
+.ps{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--rim);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.card-t{font-size:.72rem;color:var(--soft);font-weight:600;margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase}
+
+/* SESSION CARDS */
+.sess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.sess-card{background:var(--panel);border:1px solid var(--rim);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.sess-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--muted)}
+.sess-card.open::before{background:var(--amber)}
+.sess-card:hover{border-color:var(--muted);transform:translateY(-1px)}
+.sess-card.selected{border-color:var(--amber);background:rgba(212,168,67,.06)}
+.sc-grp{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-meta{font-size:.72rem;color:var(--muted);margin-bottom:8px}
+.sc-total{font-size:.9rem;font-weight:700;color:var(--amber)}
+.sc-cnt{font-size:.7rem;color:var(--soft);margin-top:2px}
+.sc-status{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px}
+.sc-open{background:rgba(212,168,67,.15);color:var(--amber)}
+.sc-closed{background:rgba(90,153,112,.12);color:var(--sage)}
+
+/* NEW SESSION CARD */
+.new-sess-card{background:none;border:2px dashed var(--muted);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;text-align:center;color:var(--muted);font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:8px;min-height:100px}
+.new-sess-card:hover{border-color:var(--amber);color:var(--amber)}
+
+/* SESSION DETAIL PANEL */
+#sess-detail{background:var(--dp);border:1px solid var(--rim);border-radius:var(--r);overflow:hidden;display:none;margin-bottom:20px}
+.sd-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(212,168,67,.05);border-bottom:1px solid var(--rim);flex-wrap:wrap;gap:8px}
+.sd-grp{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold)}
+.sd-id{font-size:.7rem;color:var(--muted);margin-top:2px}
+.sd-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* TABS inside session */
+.stabs{display:flex;gap:2px;border-bottom:1px solid var(--rim);margin-bottom:16px}
+.stab{padding:8px 16px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.82rem;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+.stab:hover{color:var(--soft)}
+.stab.on{color:var(--amber);border-bottom-color:var(--amber)}
+.stab-content{display:none;padding:0 18px 16px}
+.stab-content.on{display:block}
+
+/* ORDERS IN SESSION */
+.so-group{margin-bottom:12px;background:rgba(255,255,255,.02);border-radius:10px;overflow:hidden;border:1px solid var(--rim)}
+.so-group-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);cursor:pointer;font-size:.78rem;color:var(--soft)}
+.so-item{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-top:1px solid rgba(255,255,255,.04);font-size:.82rem}
+.so-name{color:var(--soft)}
+.so-price{color:var(--amber);font-family:'Playfair Display',serif;font-size:.92rem}
+.so-cancelled{opacity:.35;text-decoration:line-through}
+
+/* ORAL ORDER */
+.oral-wrap{padding:0 18px 16px}
+.oral-search{margin-bottom:10px}
+.oral-mode-toggle{display:flex;gap:6px;margin-bottom:10px}
+.omtb{padding:5px 14px;border-radius:20px;border:1px solid var(--rim);background:none;color:var(--muted);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.75rem;transition:all .2s}
+.omtb.on{background:rgba(212,168,67,.12);border-color:var(--amber);color:var(--amber)}
+.oral-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;max-height:240px;overflow-y:auto;margin-bottom:10px;padding-right:2px}
+.ob{background:var(--panel);border:1px solid var(--rim);border-radius:9px;padding:9px 8px;cursor:pointer;transition:all .15s;font-family:'Zen Kaku Gothic New',sans-serif;text-align:center}
+.ob:hover{border-color:var(--amber);background:rgba(212,168,67,.08)}
+.ob.sel{border-color:var(--amber);background:rgba(212,168,67,.12)}
+.ob-name{font-size:.78rem;color:var(--text);font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-price{font-size:.7rem;color:var(--amber);font-family:'Playfair Display',serif}
+.oral-cart-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;max-height:160px;overflow-y:auto}
+.oc-row{display:flex;align-items:center;justify-content:space-between;background:rgba(212,168,67,.05);border-radius:8px;padding:6px 10px;font-size:.82rem;border:1px solid rgba(212,168,67,.15)}
+.oc-left{flex:1;color:var(--soft)}
+.oc-ctrl{display:flex;align-items:center;gap:5px}
+.oc-btn{background:none;border:1px solid var(--muted);border-radius:50%;width:20px;height:20px;color:var(--soft);cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.oc-btn:hover{border-color:var(--amber);color:var(--amber)}
+.oc-qty{min-width:18px;text-align:center;color:var(--gold);font-weight:700}
+.oc-price{color:var(--amber);min-width:60px;text-align:right;font-family:'Playfair Display',serif;font-size:.9rem}
+.btn-oral-submit{width:100%;padding:10px;border-radius:9px;border:1px solid var(--amber);background:rgba(212,168,67,.1);color:var(--amber);font-size:.85rem;font-weight:700;font-family:'Zen Kaku Gothic New',sans-serif;cursor:pointer;transition:all .2s;margin-bottom:6px}
+.btn-oral-submit:disabled{opacity:.3;cursor:not-allowed}
+.btn-oral-submit:not(:disabled):hover{background:rgba(212,168,67,.2)}
+
+/* CHECKOUT AREA */
+.checkout-wrap{padding:0 18px 18px}
+.session-summary{background:rgba(255,255,255,.02);border:1px solid var(--rim);border-radius:10px;padding:14px;margin-bottom:14px}
+.ss-row{display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--soft)}
+.ss-row:last-child{border:none}
+.ss-break{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
+.ss-bi{padding:5px 12px;border-radius:8px;font-size:.72rem;font-weight:600}
+.ss-owner{background:rgba(90,153,112,.12);color:var(--sage)}
+.ss-tenant{background:rgba(155,114,176,.12);color:var(--plum)}
+.ss-total-row{display:flex;justify-content:space-between;font-weight:700;font-size:1rem;padding-top:10px;border-top:1px solid var(--rim);margin-top:4px}
+.ss-total-row span:last-child{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold)}
+
+/* DISCOUNT */
+.disc-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end}
+.disc-input-wrap{display:flex;align-items:center;gap:6px;background:var(--sur);border:1px solid var(--rim);border-radius:9px;padding:6px 12px;flex:1}
+.disc-input{background:none;border:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.9rem;outline:none;width:80px;text-align:right}
+.disc-unit{color:var(--muted);font-size:.8rem}
+.disc-type-toggle{display:flex;gap:4px}
+.dt-btn{padding:5px 10px;border-radius:8px;border:1px solid var(--rim);background:none;color:var(--muted);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.75rem;transition:all .2s}
+.dt-btn.on{background:rgba(212,168,67,.15);border-color:var(--amber);color:var(--amber)}
+.disc-preview{font-size:.8rem;color:var(--rose);margin-bottom:8px}
+
+.final-total{display:flex;justify-content:space-between;align-items:baseline;padding:10px 14px;background:rgba(212,168,67,.07);border-radius:10px;margin-bottom:12px;border:1px solid rgba(212,168,67,.2)}
+.ft-lbl{font-size:.8rem;color:var(--soft)}
+.ft-amt{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--gold)}
+
+.pay-row2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.po2{border:1px solid var(--rim);background:none;border-radius:9px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted);font-size:.75rem;font-family:'Zen Kaku Gothic New',sans-serif}
+.po2 .pi2{font-size:1.1rem;display:block;margin-bottom:2px}
+.po2.sp{border-color:#ff6680;background:rgba(255,102,128,.1);color:#ff8899}
+.po2.sc2{border-color:var(--blue);background:rgba(85,136,204,.1);color:#88aaff}
+.po2.sh{border-color:var(--sage);background:rgba(90,153,112,.1);color:#88ccaa}
+.btn-checkout{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--ember),#6a1008);color:white;font-size:.92rem;font-weight:700;font-family:'Zen Kaku Gothic New',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-checkout:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-checkout:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.sc{background:var(--panel);border:1px solid var(--rim);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+.sc::after{content:attr(data-ico);position:absolute;right:12px;top:12px;font-size:1.6rem;opacity:.12}
+.sv{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;line-height:1}
+.sl{font-size:.72rem;color:var(--muted);margin-top:4px}
+.sc.ct .sv{color:var(--amber)}.sc.co .sv{color:var(--sage)}.sc.ck .sv{color:var(--plum)}.sc.cn .sv{color:var(--blue)}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--rim)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead{background:var(--sur)}
+th{padding:10px 14px;text-align:left;color:var(--muted);font-size:.68rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--rim);color:var(--soft)}
+tr:hover td{background:rgba(255,255,255,.015)}
+td.mono{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--amber)}
+td.pr{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--ember)}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:16px;font-size:.7rem;font-weight:700}
+.b-owner{background:rgba(90,153,112,.15);color:var(--sage)}
+.b-tenant{background:rgba(155,114,176,.15);color:var(--plum)}
+.b-paypay{background:rgba(255,102,128,.12);color:#ff8899}
+.b-card{background:rgba(85,136,204,.12);color:#88aaff}
+.b-cash{background:rgba(90,153,112,.12);color:#88ccaa}
+.b-pending{background:rgba(212,168,67,.12);color:var(--amber)}
+.b-paid{background:rgba(90,153,112,.12);color:var(--sage)}
+.b-cancelled{background:rgba(192,80,48,.12);color:var(--rose)}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:9px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.8rem;font-weight:600;transition:all .2s}
+.btn-p{background:var(--amber);color:var(--bg);font-weight:700}
+.btn-p:hover{background:var(--gold)}
+.btn-g{background:var(--muted);color:var(--soft)}
+.btn-g:hover{color:var(--text)}
+.btn-r{background:rgba(192,80,48,.15);color:var(--rose);border:1px solid rgba(192,80,48,.3)}
+.btn-r:hover{background:rgba(192,80,48,.25)}
+.btn-sm{padding:4px 10px;font-size:.74rem;border-radius:7px}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:.75rem;color:var(--soft);margin-bottom:4px}
+.fc{width:100%;padding:8px 11px;border-radius:9px;background:var(--sur);border:1px solid var(--rim);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:.88rem;outline:none;transition:border .2s}
+.fc:focus{border-color:var(--amber)}
+select.fc option{background:var(--sur)}
+
+/* TABS (page level) */
+.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--rim)}
+.tab{padding:8px 16px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.82rem;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+.tab:hover{color:var(--soft)}
+.tab.on{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* RANK */
+.ri{margin-bottom:11px}
+.rm{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px}
+.rn{color:var(--text)}.rv{color:var(--amber);font-weight:700;font-family:'Playfair Display',serif;font-size:.95rem}
+.rt{background:var(--muted);border-radius:4px;height:7px;overflow:hidden}
+.rf{height:100%;border-radius:4px;transition:width .7s cubic-bezier(0.25,1,.5,1)}
+
+/* FILTER */
+.fr{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.fc2{padding:4px 12px;border-radius:18px;border:1px solid var(--rim);background:none;color:var(--muted);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.75rem;transition:all .2s}
+.fc2:hover{border-color:var(--soft);color:var(--soft)}
+.fc2.on{background:rgba(212,168,67,.12);border-color:var(--amber);color:var(--amber)}
+
+/* PRODUCT ROW */
+.pr-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--rim);transition:background .15s}
+.pr-row:last-child{border:none}
+.pr-row:hover{background:rgba(255,255,255,.015)}
+.pr-name{flex:1;font-weight:600;min-width:100px}
+.pr-cat{font-size:.75rem;color:var(--muted);min-width:55px}
+.pr-price{font-family:'Playfair Display',serif;font-size:1rem;color:var(--ember);min-width:70px}
+.pr-off{opacity:.35}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rg{display:flex;gap:12px;flex-wrap:wrap}
+.ri2{display:flex;align-items:center;gap:6px;cursor:pointer}
+.ri2 input{accent-color:var(--amber)}
+.empty{text-align:center;padding:36px;color:var(--muted);font-size:.85rem}
+.empty .ei{font-size:2rem;display:block;margin-bottom:6px;opacity:.4}
+
+/* MODAL */
+.mbg{position:fixed;inset:0;z-index:500;background:rgba(8,6,8,.9);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:16px}
+.mbg.show{display:flex}
+.mc{background:var(--panel);border:1px solid var(--rim);border-radius:20px;padding:0;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;animation:pop .35s cubic-bezier(0.34,1.3,0.64,1)}
+@keyframes pop{from{transform:scale(0.85) translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.mc-h{padding:18px 22px 14px;border-bottom:1px solid var(--rim);display:flex;align-items:center;justify-content:space-between}
+.mc-title{font-family:'Playfair Display',serif;color:var(--amber);font-size:1.2rem;font-weight:700}
+.mc-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;transition:color .2s;line-height:1}
+.mc-x:hover{color:var(--text)}
+.mc-body{padding:18px 22px}
+.mc-foot{padding:12px 22px;border-top:1px solid var(--rim);display:flex;gap:8px;justify-content:flex-end}
+
+/* RECEIPT */
+.receipt{font-family:monospace;font-size:.78rem;color:var(--soft);line-height:1.8;white-space:pre;overflow-x:auto;padding:16px 22px}
+
+#toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--panel);border:1px solid var(--rim);color:var(--text);padding:10px 18px;border-radius:11px;font-size:.82rem;opacity:0;transform:translateY(8px);transition:all .3s;box-shadow:0 6px 28px rgba(0,0,0,.5);pointer-events:none}
+#toast.show{opacity:1;transform:none}
+@media(max-width:720px){#sb{display:none}}
+
+/* BIZDAY START SCREEN */
+#bizday-start-screen{position:fixed;inset:0;z-index:1500;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
+#bizday-start-screen.show{display:flex}
+.bds-box{width:100%;max-width:400px;animation:pop .4s cubic-bezier(0.34,1.3,0.64,1)}
+.bds-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--amber);text-align:center;margin-bottom:4px;letter-spacing:.1em}
+.bds-sub{text-align:center;font-size:.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:28px}
+.bds-card{background:var(--panel);border:1px solid var(--rim);border-radius:20px;padding:28px 24px}
+.bds-title{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);margin-bottom:6px;text-align:center}
+.bds-desc{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:24px;line-height:1.6}
+.bds-date-label{font-size:.75rem;color:var(--soft);margin-bottom:8px;display:block;letter-spacing:.5px}
+.btn-bizday-start{width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--amber),var(--ember));color:var(--bg);font-size:.95rem;font-weight:700;font-family:'Zen Kaku Gothic New',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.05em;margin-top:16px}
+.btn-bizday-start:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.bds-already-open{background:rgba(90,153,98,.12);border:1px solid rgba(90,153,98,.3);border-radius:12px;padding:14px;margin-bottom:16px;font-size:.85rem;color:var(--sage);text-align:center;display:none}
+.btn-bizday-continue{width:100%;padding:12px;border-radius:11px;border:1px solid var(--sage);background:rgba(90,153,98,.1);color:var(--sage);font-size:.9rem;font-weight:700;font-family:'Zen Kaku Gothic New',sans-serif;cursor:pointer;transition:all .2s;margin-top:8px;display:none}
+.btn-bizday-continue:hover{background:rgba(90,153,98,.2)}
+#login-screen.hidden{display:none}
+.login-box{width:100%;max-width:360px;animation:pop .4s cubic-bezier(0.34,1.3,0.64,1)}
+.login-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--amber);text-align:center;margin-bottom:4px;letter-spacing:.1em}
+.login-sub{text-align:center;font-size:.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.login-card{background:var(--panel);border:1px solid var(--rim);border-radius:20px;padding:28px 24px}
+.login-label{font-size:.75rem;color:var(--soft);margin-bottom:8px;display:block;letter-spacing:.5px}
+.login-input-wrap{position:relative;margin-bottom:10px}
+.login-input{width:100%;padding:12px 44px 12px 14px;border-radius:11px;background:var(--sur);border:1px solid var(--rim);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:1rem;outline:none;transition:border .2s;letter-spacing:.1em}
+.login-input:focus{border-color:var(--amber)}
+.login-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;transition:color .2s}
+.login-eye:hover{color:var(--soft)}
+.login-error{font-size:.78rem;color:var(--rose);min-height:18px;margin-bottom:10px;text-align:center;opacity:0;transition:opacity .2s}
+.login-error.show{opacity:1}
+.btn-login{width:100%;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--amber),var(--ember));color:var(--bg);font-size:.95rem;font-weight:700;font-family:'Zen Kaku Gothic New',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.05em}
+.btn-login:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-login:active{transform:none}
+.login-hint{text-align:center;font-size:.7rem;color:var(--muted);margin-top:16px;line-height:1.6}
+.login-hint code{background:var(--rim);padding:1px 6px;border-radius:4px;color:var(--soft);font-size:.72rem}
+/* logout btn in sidebar */
+.btn-logout{display:flex;align-items:center;gap:8px;width:calc(100% - 16px);margin:0 8px;padding:8px 11px;border-radius:10px;border:1px solid rgba(192,80,48,.3);background:rgba(192,80,48,.08);color:var(--rose);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.8rem;transition:all .2s}
+.btn-logout:hover{background:rgba(192,80,48,.18)}
+
+/* FREE FLOW TIMER */
+.ff-timer-bar{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);
+  border-radius:10px;padding:8px 14px;
+}
+.ff-timer-icon{font-size:1.1rem}
+.ff-timer-label{font-size:.72rem;color:var(--soft);margin-right:4px}
+.ff-timer-time{
+  font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;
+  color:var(--amber);letter-spacing:.04em;
+}
+.ff-timer-time.warning{color:var(--rose);animation:pulse .8s infinite alternate}
+.ff-timer-time.expired{color:var(--muted)}
+@keyframes pulse{from{opacity:1}to{opacity:.4}}
+.ff-timer-pct{flex:1;height:5px;background:var(--muted);border-radius:3px;overflow:hidden;min-width:60px}
+.ff-timer-fill{height:100%;border-radius:3px;transition:width 1s linear;background:var(--amber)}
+.ff-timer-fill.warning{background:var(--rose)}
+/* session card ff badge */
+.ff-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(212,168,67,.14);border:1px solid rgba(212,168,67,.3);
+  border-radius:6px;padding:2px 8px;font-size:.68rem;color:var(--amber);font-weight:700;
+}
+.ff-badge.warn{background:rgba(224,112,96,.14);border-color:rgba(224,112,96,.3);color:var(--rose)}
+.ff-badge.exp{background:rgba(74,63,88,.2);border-color:var(--muted);color:var(--muted)}
+
+/* BIZDAY */
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--rim);font-size:.85rem}
+.breakdown-row:last-child{border:none}
+.breakdown-row.total-row{font-weight:700;padding-top:10px;margin-top:2px;border-top:2px solid var(--muted);border-bottom:none}
+.bd-label{color:var(--soft)}
+.bd-val{font-family:'Playfair Display',serif;font-size:1rem;color:var(--text)}
+.breakdown-row.total-row .bd-val{font-size:1.15rem;color:var(--gold)}
+.bizday-open-badge{background:rgba(90,153,98,.12);border:1px solid rgba(90,153,98,.3);border-radius:8px;padding:5px 12px;color:var(--sage);font-size:.8rem;font-weight:700;display:inline-block}
+.bizday-closed-badge{background:rgba(74,63,88,.2);border:1px solid var(--muted);border-radius:8px;padding:5px 12px;color:var(--soft);font-size:.8rem;font-weight:700;display:inline-block}
+@media print{
+  #sb,#login-screen,.sd-actions,.ph .btn,.mb-btn{display:none!important}
+  .pg{display:block!important;padding:8px!important}
+  .pg:not(#pg-bizday){display:none!important}
+  #main{overflow:visible!important}
+  body{background:white!important;color:#111!important;display:block!important}
+  .card{background:white!important;border:1px solid #ddd!important}
+  .card-t,.pt,.ps,.bd-label,.breakdown-label{color:#444!important}
+  .bd-val,.sv,.stat-val{color:#111!important}
+  td,th{color:#111!important;border-color:#ccc!important}
+  .g2{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important}
+}</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🍸 JUNO</div>
+    <div class="login-sub">Admin Console</div>
+    <div class="login-card">
+      <label class="login-label">パスワード</label>
+      <div class="login-input-wrap">
+        <input class="login-input" type="password" id="pw-input" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="login-eye" onclick="togglePwVis()" id="pw-eye">👁</button>
+      </div>
+      <div class="login-error" id="login-error">パスワードが違います</div>
+      <button class="btn-login" onclick="doLogin()">ログイン →</button>
+      <div class="login-hint">
+        デフォルトパスワード: <code>juno2024</code><br>
+        変更するには admin.html 内の<br><code>ADMIN_PASSWORD</code> を書き換えてください
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BIZDAY START SCREEN (ログイン後・営業開始前に表示) -->
+<div id="bizday-start-screen">
+  <div class="bds-box">
+    <div class="bds-logo">🍸 JUNO</div>
+    <div class="bds-sub">Admin Console</div>
+    <div class="bds-card">
+      <div class="bds-title">📅 営業開始</div>
+      <div class="bds-desc">営業を開始する日付を確認して<br>「営業開始」ボタンを押してください</div>
+
+      <!-- すでに営業中の場合 -->
+      <div class="bds-already-open" id="bds-open-info"></div>
+      <button class="btn-bizday-continue" id="btn-bds-continue" onclick="continueToBizday()">→ 営業を継続する（管理画面へ）</button>
+
+      <!-- 新規営業開始 -->
+      <div id="bds-new-wrap">
+        <label class="bds-date-label">営業日</label>
+        <input type="date" class="fc" id="bds-date" style="width:100%;font-size:1rem;padding:12px">
+        <button class="btn-bizday-start" onclick="startBizdayFromScreen()">🔓 この日の営業を開始する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="sb">
+  <div class="sb-logo"><h1>🍸 Bar Admin</h1><p>Management Console</p></div>
+  <div class="sb-nav">
+    <div class="sb-sec">フロア</div>
+    <button class="sb-btn on" onclick="goto('floor',this)"><span class="ic">👥</span>セッション管理</button>
+    <div class="sb-sec">商品</div>
+    <button class="sb-btn" onclick="goto('products',this)"><span class="ic">🍹</span>商品管理</button>
+    <div class="sb-sec">分析</div>
+    <button class="sb-btn" onclick="goto('bizday',this)"><span class="ic">📅</span>営業日管理</button>
+    <button class="sb-btn" onclick="goto('sales',this)"><span class="ic">📊</span>売上管理</button>
+    <button class="sb-btn" onclick="goto('ranking',this)"><span class="ic">🏆</span>ランキング</button>
+    <button class="sb-btn" onclick="goto('orders',this)"><span class="ic">📋</span>注文履歴</button>
+  </div>
+  <div class="sb-foot">
+    <div>現在の営業日</div>
+    <div class="sb-stat" id="sb-bizday-info" style="font-size:.75rem;color:var(--amber);margin-top:2px">—</div>
+    <div class="sb-stat" id="sb-stat">—</div>
+    <button class="btn-logout" id="btn-sb-close-bizday" onclick="closeBizdayFromSidebar()" style="margin-top:8px;display:none;border-color:rgba(192,80,48,.4);color:var(--rose)">🔒 営業終了</button>
+    <button class="btn-logout" onclick="doLogout()" style="margin-top:6px">🚪 ログアウト</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+
+<!-- ===== FLOOR / SESSION ===== -->
+<section class="pg on" id="pg-floor">
+  <div class="ph">
+    <div><div class="pt">セッション管理</div><div class="ps">グループごとの注文・会計管理</div></div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-g btn-sm" onclick="renderFloor()">🔄 更新</button>
+      <button class="btn btn-p btn-sm" onclick="openNewSessModal()">＋ 新規グループ</button>
+    </div>
+  </div>
+
+  <!-- お会計リクエスト通知エリア -->
+  <div id="kaikei-notify-area" style="display:none;margin-bottom:16px"></div>
+
+  <!-- Session cards -->
+  <div class="sess-grid" id="sess-grid"></div>
+
+  <!-- Session detail -->
+  <div id="sess-detail">
+    <div class="sd-head">
+      <div>
+        <div class="sd-grp" id="sd-grp">—</div>
+        <div class="sd-id" id="sd-id">—</div>
+        <!-- フリーフロータイマー（admin側） -->
+        <div id="sd-ff-timer" style="display:none;margin-top:8px"></div>
+      </div>
+      <div class="sd-actions">
+        <button class="btn btn-sm" style="background:rgba(212,168,67,.15);color:var(--amber);border:1px solid rgba(212,168,67,.3)" onclick="openFFModal()">🍹 FF追加</button>
+        <button class="btn btn-g btn-sm" onclick="showRyoshu()">📄 領収書</button>
+        <button class="btn btn-g btn-sm" onclick="showReceipt()">🧾 伝票</button>
+        <button class="btn btn-r btn-sm" onclick="closeSessPanel()">✕</button>
+      </div>
+    </div>
+
+    <div class="stabs">
+      <button class="stab on" onclick="switchStab('orders',this)">📋 注文</button>
+      <button class="stab" onclick="switchStab('oral',this)">＋ 口頭注文</button>
+      <button class="stab" onclick="switchStab('checkout',this)">💳 お会計</button>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="stab-content on" id="stab-orders">
+      <div id="sd-orders-list"></div>
+      <div class="ss-break" id="sd-break" style="padding:0 0 12px"></div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:.95rem;padding:8px 0 0;border-top:1px solid var(--rim)">
+        <span>小計</span>
+        <span style="font-family:'Playfair Display',serif;color:var(--gold);font-size:1.1rem" id="sd-subtotal">¥0</span>
+      </div>
+    </div>
+
+    <!-- ORAL ORDER TAB -->
+    <div class="stab-content" id="stab-oral">
+      <div class="oral-wrap" style="padding:0 0 16px">
+        <div class="oral-mode-toggle">
+          <button class="omtb on" onclick="setOralMode('grid',this)">🔲 ボタン選択</button>
+          <button class="omtb" onclick="setOralMode('search',this)">🔍 検索</button>
+        </div>
+        <!-- GRID MODE -->
+        <div id="oral-grid-mode">
+          <div style="margin-bottom:8px">
+            <div class="cat-row" id="oral-cat-row" style="margin-bottom:8px"></div>
+          </div>
+          <div class="oral-grid" id="oral-grid"></div>
+        </div>
+        <!-- SEARCH MODE -->
+        <div id="oral-search-mode" style="display:none">
+          <input class="fc" id="oral-search-input" placeholder="商品名で検索..." oninput="oralSearch()" style="margin-bottom:8px">
+          <div class="oral-grid" id="oral-search-grid"></div>
+        </div>
+
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--rim)">
+          <div style="font-size:.72rem;color:var(--soft);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">カートに入れた商品</div>
+          <div class="oral-cart-list" id="oral-cart-list"></div>
+          <button class="btn-oral-submit" id="btn-oral-submit" onclick="submitOral()" disabled>この内容で注文を追加する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECKOUT TAB -->
+    <div class="stab-content" id="stab-checkout">
+      <div class="checkout-wrap" style="padding:0 0 16px">
+        <div class="session-summary">
+          <div class="card-t" style="margin-bottom:8px">注文サマリー</div>
+          <div id="co-items"></div>
+          <div class="ss-break" id="co-break"></div>
+          <div class="ss-total-row"><span>小計</span><span id="co-subtotal">¥0</span></div>
+        </div>
+
+        <!-- DISCOUNT -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:.72rem;color:var(--soft);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">割引</div>
+          <div class="disc-row">
+            <div class="disc-input-wrap">
+              <input class="disc-input" id="disc-val" type="number" min="0" placeholder="0" oninput="calcDiscount()">
+              <span class="disc-unit" id="disc-unit-lbl">円引き</span>
+            </div>
+            <div class="disc-type-toggle">
+              <button class="dt-btn on" id="dt-yen" onclick="setDiscType('yen',this)">円</button>
+              <button class="dt-btn" id="dt-pct" onclick="setDiscType('pct',this)">%</button>
+            </div>
+            <button class="btn btn-r btn-sm" onclick="clearDiscount()">クリア</button>
+          </div>
+          <div class="disc-preview" id="disc-preview"></div>
+        </div>
+
+        <div class="final-total">
+          <span class="ft-lbl">お会計合計</span>
+          <span class="ft-amt" id="final-total">¥0</span>
+        </div>
+
+        <div style="font-size:.72rem;color:var(--soft);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">お支払い方法</div>
+        <div class="pay-row2">
+          <div class="po2" id="cp-paypay" onclick="selCP('paypay')"><span class="pi2">📱</span>PayPay</div>
+          <div class="po2" id="cp-card" onclick="selCP('card')"><span class="pi2">💳</span>クレジット</div>
+          <div class="po2" id="cp-cash" onclick="selCP('cash')"><span class="pi2">💴</span>現金</div>
+        </div>
+        <button class="btn-checkout" id="btn-checkout" onclick="doCheckout()" disabled>
+          お会計を完了してセッションを終了する
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRODUCTS ===== -->
+<section class="pg" id="pg-products">
+  <div class="ph">
+    <div><div class="pt">商品管理</div><div class="ps">メニューの追加・編集・帰属先設定</div></div>
+    <button class="btn btn-p" onclick="openPM()">＋ 商品を追加</button>
+  </div>
+  <div class="card" style="padding:0"><div id="prod-list"></div></div>
+</section>
+
+<!-- ===== SALES ===== -->
+<section class="pg" id="pg-sales">
+  <div class="ph">
+    <div><div class="pt">売上管理</div><div class="ps">オーナー / テナント別集計</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="date" class="fc" id="sf" style="width:140px" onchange="renderSales()">
+      <span style="color:var(--muted);font-size:.85rem">〜</span>
+      <input type="date" class="fc" id="st" style="width:140px" onchange="renderSales()">
+    </div>
+  </div>
+  <div class="stat-grid" id="sales-stats"></div>
+  <div class="tabs">
+    <button class="tab on" onclick="setSalesTab('all',this)">全体</button>
+    <button class="tab" onclick="setSalesTab('owner',this)">🌿 オーナー</button>
+    <button class="tab" onclick="setSalesTab('tenant',this)">💜 テナント</button>
+  </div>
+  <div class="tw">
+    <table><thead><tr>
+      <th>注文ID</th><th>日時</th><th>グループ</th><th>商品</th><th>支払</th><th>帰属</th><th>金額</th><th>状態</th>
+    </tr></thead>
+    <tbody id="sales-tb"></tbody></table>
+  </div>
+</section>
+
+<!-- ===== RANKING ===== -->
+<section class="pg" id="pg-ranking">
+  <div class="ph"><div class="pt">ランキング</div><div class="ps">売れ筋・売上金額</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-t">📦 注文数ランキング</div><div id="rk-all"></div></div>
+    <div class="card"><div class="card-t">💰 売上金額ランキング</div><div id="rk-rev"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-t" style="color:var(--sage)">🌿 オーナー商品</div><div id="rk-owner"></div></div>
+    <div class="card"><div class="card-t" style="color:var(--plum)">💜 テナント商品</div><div id="rk-tenant"></div></div>
+  </div>
+</section>
+
+<!-- ===== ORDERS HISTORY ===== -->
+<section class="pg" id="pg-orders">
+  <div class="ph">
+    <div><div class="pt">注文履歴</div><div class="ps">全注文の詳細一覧</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="date" class="fc" id="of" style="width:140px" onchange="renderOrders()">
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('of').value='';renderOrders()">クリア</button>
+    </div>
+  </div>
+  <div class="fr" id="order-filter"></div>
+  <div id="ord-list"></div>
+</section>
+
+<!-- ===== BIZDAY ===== -->
+<section class="pg" id="pg-bizday">
+  <div class="ph">
+    <div><div class="pt">営業日管理</div><div class="ps">営業開始・終了・日次集計レポート</div></div>
+  </div>
+
+  <!-- 営業ステータスカード -->
+  <div class="card" style="margin-bottom:16px" id="bizday-status-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:.72rem;color:var(--soft);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">営業日</div>
+        <input type="date" class="fc" id="bizday-date" style="width:160px;font-size:1rem">
+      </div>
+      <div id="bizday-status-badge" style="font-size:.85rem;color:var(--muted)">— 未開始</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-p" id="btn-bizday-open" onclick="openBizday()">🔓 営業開始</button>
+        <button class="btn btn-r" id="btn-bizday-close" onclick="closeBizday()" style="display:none">🔒 営業終了</button>
+      </div>
+    </div>
+    <div id="bizday-open-info" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--rim);font-size:.8rem;color:var(--muted)"></div>
+  </div>
+
+  <!-- 集計レポート -->
+  <div id="bizday-report" style="display:none">
+
+    <!-- 全体サマリー -->
+    <div class="stat-grid" id="bizday-summary-stats" style="margin-bottom:24px"></div>
+
+    <!-- ══ オーナーレポート ══ -->
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--sage)">
+        <span style="font-size:1.1rem">🌿</span>
+        <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--sage)">オーナー　集計レポート</span>
+        <span id="owner-total-badge" style="margin-left:auto;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--sage)">¥0</span>
+      </div>
+
+      <!-- オーナー：会計手段別 -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-t">💳 会計手段別売上</div>
+        <div id="owner-pay-breakdown"></div>
+      </div>
+
+      <!-- オーナー：商品別 -->
+      <div class="card" style="padding:0">
+        <div style="padding:12px 18px;border-bottom:1px solid var(--rim)">
+          <div class="card-t" style="margin-bottom:0">📦 商品別売上</div>
+        </div>
+        <div class="tw" style="border:none;border-radius:0">
+          <table>
+            <thead><tr>
+              <th>商品名</th><th>注文数</th><th>売上合計</th><th>PayPay</th><th>クレカ</th><th>現金</th>
+            </tr></thead>
+            <tbody id="owner-items-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ テナントレポート ══ -->
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--plum)">
+        <span style="font-size:1.1rem">💜</span>
+        <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--plum)">テナント　集計レポート</span>
+        <span id="tenant-total-badge" style="margin-left:auto;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--plum)">¥0</span>
+      </div>
+
+      <!-- テナント：会計手段別 -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-t">💳 会計手段別売上</div>
+        <div id="tenant-pay-breakdown"></div>
+      </div>
+
+      <!-- テナント：商品別 -->
+      <div class="card" style="padding:0">
+        <div style="padding:12px 18px;border-bottom:1px solid var(--rim)">
+          <div class="card-t" style="margin-bottom:0">📦 商品別売上</div>
+        </div>
+        <div class="tw" style="border:none;border-radius:0">
+          <table>
+            <thead><tr>
+              <th>商品名</th><th>注文数</th><th>売上合計</th><th>PayPay</th><th>クレカ</th><th>現金</th>
+            </tr></thead>
+            <tbody id="tenant-items-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- フリーフロー集計 -->
+    <div class="card" id="bizday-ff-card" style="margin-bottom:16px;display:none">
+      <div class="card-t" style="color:var(--amber)">🍹 フリーフロー集計</div>
+      <div id="bizday-ff-content"></div>
+    </div>
+
+    <!-- 印刷ボタン -->
+    <div style="text-align:right;margin-top:8px;margin-bottom:8px">
+      <button class="btn btn-g" onclick="printBizdayReport()">🖨 レポートを印刷</button>
+    </div>
+
+  </div>
+
+  <div id="bizday-empty" style="text-align:center;padding:40px;color:var(--muted)">
+    <div style="font-size:2rem;margin-bottom:8px">📅</div>
+    日付を選んで営業を開始してください
+  </div>
+</section>
+
+</main>
+
+<!-- FREE FLOW 追加モーダル -->
+<div class="mbg" id="ff-modal">
+  <div class="mc">
+    <div class="mc-h">
+      <div class="mc-title">🍹 フリーフローを追加</div>
+      <button class="mc-x" onclick="closeFFModal()">✕</button>
+    </div>
+    <div class="mc-body">
+      <div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:.85rem;font-weight:700;color:var(--amber);margin-bottom:6px">🍹 フリーフロー</div>
+        <div style="font-size:.8rem;color:var(--soft);line-height:1.7">
+          ¥5,000 / 人　｜　制限時間 2時間（120分）<br>
+          このセッションにフリーフローを追加します。<br>
+          タイマーは追加した時点からスタートします。
+        </div>
+      </div>
+      <div class="fg">
+        <label>人数</label>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+          <button onclick="adjFFPax(-1)" type="button" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--rim);background:none;color:var(--soft);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">−</button>
+          <span id="ff-modal-pax" style="font-size:1.5rem;font-weight:700;color:var(--gold);min-width:28px;text-align:center">2</span>
+          <button onclick="adjFFPax(1)" type="button" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--amber);background:rgba(212,168,67,.12);color:var(--amber);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s">＋</button>
+          <span style="font-size:.85rem;color:var(--soft)">名</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(212,168,67,.06);border-radius:10px;border:1px solid rgba(212,168,67,.2)">
+        <span style="font-size:.85rem;color:var(--soft)">フリーフロー料金</span>
+        <span id="ff-modal-price" style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--amber)">¥10,000</span>
+      </div>
+    </div>
+    <div class="mc-foot">
+      <button class="btn btn-g" onclick="closeFFModal()">キャンセル</button>
+      <button class="btn btn-p" onclick="addFreeflow()">フリーフローを開始する</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW SESSION MODAL -->
+<div class="mbg" id="new-sess-modal">
+  <div class="mc">
+    <div class="mc-h"><div class="mc-title">新規グループ</div><button class="mc-x" onclick="closeNewSessModal()">✕</button></div>
+    <div class="mc-body">
+      <div class="fg"><label>グループ名</label><input class="fc" id="ns-name" placeholder="例：山田様 3名、窓際のカップル" maxlength="40"></div>
+    </div>
+    <div class="mc-foot">
+      <button class="btn btn-g" onclick="closeNewSessModal()">キャンセル</button>
+      <button class="btn btn-p" onclick="createSess()">セッションを開始する</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="mbg" id="pm-modal">
+  <div class="mc">
+    <div class="mc-h"><div class="mc-title" id="pm-title">商品を追加</div><button class="mc-x" onclick="closePM()">✕</button></div>
+    <div class="mc-body">
+      <div class="fg"><label>商品名</label><input class="fc" id="pm-name" placeholder="例：ハイボール"></div>
+      <div class="g2">
+        <div class="fg"><label>価格（円）</label><input class="fc" id="pm-price" type="number" placeholder="600"></div>
+        <div class="fg"><label>カテゴリ</label>
+          <select class="fc" id="pm-cat">
+            <option>ドリンク</option><option>フード</option><option>おつまみ</option>
+            <option>デザート</option><option>ノンアル</option><option>その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>売上帰属先</label>
+        <div class="rg" style="margin-top:6px">
+          <label class="ri2"><input type="radio" name="pm-own" value="owner" checked><span class="bdg b-owner">オーナー</span></label>
+          <label class="ri2"><input type="radio" name="pm-own" value="tenant"><span class="bdg b-tenant">テナント</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="mc-foot">
+      <button class="btn btn-g" onclick="closePM()">キャンセル</button>
+      <button class="btn btn-p" onclick="saveProd()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 領収書モーダル -->
+<div class="mbg" id="ryoshu-modal">
+  <div class="mc" style="max-width:520px;padding:0;max-height:90vh;overflow-y:auto">
+    <div class="mc-h" style="position:sticky;top:0;background:var(--panel);z-index:1">
+      <div class="mc-title">📄 領収書</div>
+      <button class="mc-x" onclick="closeRyoshu()">✕</button>
+    </div>
+    <!-- 設定エリア -->
+    <div style="padding:14px 20px;border-bottom:1px solid var(--rim);display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:160px">
+          <label style="font-size:.75rem;color:var(--soft);white-space:nowrap">宛名</label>
+          <input id="ryoshu-atena" class="fc" placeholder="上様" oninput="renderRyoshuPreview()">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:160px">
+          <label style="font-size:.75rem;color:var(--soft);white-space:nowrap">但し書き</label>
+          <input id="ryoshu-tadashi" class="fc" placeholder="お飲食代として" oninput="renderRyoshuPreview()">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:.75rem;color:var(--soft);white-space:nowrap">発行単位</label>
+        <div style="display:flex;gap:6px">
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:var(--text)">
+            <input type="radio" name="ryoshu-unit" id="ryoshu-unit-session" value="session" checked onchange="onRyoshuUnitChange()"> セッション全体
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:var(--text)">
+            <input type="radio" name="ryoshu-unit" id="ryoshu-unit-order" value="order" onchange="onRyoshuUnitChange()"> 注文ID単位
+          </label>
+        </div>
+      </div>
+      <div id="ryoshu-order-sel-wrap" style="display:none">
+        <label style="font-size:.75rem;color:var(--soft);display:block;margin-bottom:4px">注文を選択</label>
+        <select id="ryoshu-order-sel" class="fc" onchange="renderRyoshuPreview()"></select>
+      </div>
+    </div>
+    <!-- プレビュー -->
+    <div id="ryoshu-preview" style="padding:0;background:#e8e0f0;min-height:200px"></div>
+    <div class="mc-foot" style="position:sticky;bottom:0;background:var(--panel)">
+      <button class="btn btn-p" onclick="downloadRyoshuPDF()" style="flex:1">📥 PDFダウンロード</button>
+      <button class="btn btn-g" onclick="closeRyoshu()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 印刷用（不要になったので削除） -->
+<div id="ryoshu-print-area" style="display:none"></div>
+
+<!-- RECEIPT MODAL -->
+<div class="mbg" id="receipt-modal">
+  <div class="mc" style="max-width:380px">
+    <div class="mc-h"><div class="mc-title">🧾 伝票</div><button class="mc-x" onclick="closeReceipt()">✕</button></div>
+    <pre class="receipt" id="receipt-text"></pre>
+    <div class="mc-foot">
+      <button class="btn btn-g" onclick="printReceipt()">🖨 印刷</button>
+      <button class="btn btn-p" onclick="closeReceipt()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, remove }
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBnaClKKb3zSz26YtDwOlyP3rrIH26_wNg",
+  authDomain: "juno-bar.firebaseapp.com",
+  databaseURL: "https://juno-bar-default-rtdb.firebaseio.com",
+  projectId: "juno-bar",
+  storageBucket: "juno-bar.firebasestorage.app",
+  messagingSenderId: "508301491845",
+  appId: "1:508301491845:web:af51f491aa60a7e4b9b3ec"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+const CE={ドリンク:'🍸',フード:'🍟',おつまみ:'🍢',デザート:'🍮',ノンアル:'🥤',その他:'✨'};
+const DP=[
+  {id:'d1',name:'ハイボール',price:600,category:'ドリンク',ownership:'owner',active:true},
+  {id:'d2',name:'ジントニック',price:700,category:'ドリンク',ownership:'owner',active:true},
+  {id:'d3',name:'生ビール',price:600,category:'ドリンク',ownership:'tenant',active:true},
+  {id:'d4',name:'ハウスワイン（グラス）',price:800,category:'ドリンク',ownership:'owner',active:true},
+  {id:'d5',name:'モスコミュール',price:750,category:'ドリンク',ownership:'owner',active:true},
+  {id:'f1',name:'フライドポテト',price:500,category:'フード',ownership:'tenant',active:true},
+  {id:'f2',name:'枝豆',price:380,category:'おつまみ',ownership:'tenant',active:true},
+  {id:'f3',name:'チーズ盛り合わせ',price:900,category:'おつまみ',ownership:'tenant',active:true},
+  {id:'n1',name:'ジンジャーエール',price:450,category:'ノンアル',ownership:'tenant',active:true},
+];
+
+// ── Firebase リアルタイム購読 ─────────────────────────
+let fbProducts=[], fbOrders=[], fbSessions={};
+
+onValue(ref(db,'products'), snap=>{
+  const val=snap.val();
+  fbProducts = val ? Object.values(val) : DP;
+  if(document.getElementById('pg-products').classList.contains('on')) renderProds();
+  if(document.getElementById('pg-floor').classList.contains('on')) renderOralGrid();
+});
+onValue(ref(db,'orders'), snap=>{
+  const val=snap.val();
+  fbOrders = val ? Object.values(val) : [];
+  if(document.getElementById('pg-floor').classList.contains('on')){ renderFloor(); if(selSessId) renderSessDetail(); }
+  if(document.getElementById('pg-sales').classList.contains('on')) renderSales();
+  if(document.getElementById('pg-ranking').classList.contains('on')) renderRanking();
+  if(document.getElementById('pg-orders').classList.contains('on')) renderOrders();
+});
+onValue(ref(db,'sessions'), snap=>{
+  fbSessions = snap.val() || {};
+  if(document.getElementById('pg-floor').classList.contains('on')){ renderFloor(); if(selSessId) renderSessDetail(); }
+});
+
+// お会計リクエストをリアルタイム購読
+onValue(ref(db,'kaikei_requests'), snap=>{
+  const val=snap.val()||{};
+  const pending=Object.values(val).filter(r=>r.status==='pending');
+  renderKaikeiNotify(pending);
+  // サイドバーバッジ更新
+  const badge=document.getElementById('sb-stat');
+  if(pending.length>0){
+    badge.innerHTML=`<span style="color:var(--rose);font-weight:700">💳 お会計リクエスト ${pending.length}件</span>`;
+  } else {
+    updateSbStat();
+  }
+});
+
+function getP(){ return fbProducts.length ? fbProducts : DP; }
+function getO(){ return fbOrders; }
+function getS(){ return fbSessions; }
+
+// ── STATE ──────────────────────────────────────────────
+let selSessId=null,oralCart={},closePay=null,salesTab='all',ordFilt='all',editProdId=null;
+let discType='yen',discVal=0;
+let oralMode='grid',oralCat='all';
+
+// ── NAV ──────────────────────────────────────────────
+window.goto = function(pg,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+pg).classList.add('on');
+  btn.classList.add('on');
+  if(pg==='floor')renderFloor();
+  if(pg==='products')renderProds();
+  if(pg==='sales')renderSales();
+  if(pg==='ranking')renderRanking();
+  if(pg==='orders')renderOrders();
+  if(pg==='bizday')renderBizday();
+};
+
+// ── LOGIN ──────────────────────────────────────────────
+const ADMIN_PASSWORD = 'juno2024';
+const LOGIN_KEY = 'bp_admin_auth';
+const BIZDAY_KEY = 'bp_current_bizday'; // 現在の営業日をセッションに保持
+
+// 今日の日付文字列を返す
+function getTodayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ログイン後 → 営業開始画面を表示
+async function showBizdayStartScreen(){
+  const today=getTodayStr();
+  // bds-date に今日の日付をセット
+  document.getElementById('bds-date').value=today;
+
+  // Firebaseで今日の営業状態を確認
+  const key=getBizdayKey(today);
+  const snap=await get(ref(db,`bizdays/${key}`));
+  const biz=snap.val();
+
+  const openInfo=document.getElementById('bds-open-info');
+  const btnContinue=document.getElementById('btn-bds-continue');
+  const newWrap=document.getElementById('bds-new-wrap');
+
+  if(biz && biz.status==='open'){
+    // すでに営業中 → 継続ボタンを表示
+    openInfo.style.display='block';
+    openInfo.textContent=`✅ ${today} は営業中です（開始: ${fmtDt(biz.openedAt)}）`;
+    btnContinue.style.display='block';
+    newWrap.style.display='none';
+  } else if(biz && biz.status==='closed'){
+    // 終了済 → 新規開始か別の日付を選択
+    openInfo.style.display='block';
+    openInfo.textContent=`⚠️ ${today} の営業はすでに終了しています。別の日付を選ぶか、続行してください。`;
+    btnContinue.style.display='block';
+    btnContinue.textContent='→ そのまま管理画面へ';
+    newWrap.style.display='block';
+  } else {
+    // 未開始
+    openInfo.style.display='none';
+    btnContinue.style.display='none';
+    newWrap.style.display='block';
+  }
+
+  document.getElementById('bizday-start-screen').classList.add('show');
+}
+
+// 営業開始画面から営業開始
+window.startBizdayFromScreen = async function(){
+  const dateStr=document.getElementById('bds-date').value;
+  if(!dateStr){alert('日付を選択してください');return;}
+  const key=getBizdayKey(dateStr);
+  const snap=await get(ref(db,`bizdays/${key}`));
+  if(snap.exists()&&snap.val().status==='open'){
+    // すでに営業中 → そのまま継続
+    enterMainScreen(dateStr);
+    return;
+  }
+  if(!confirm(`${dateStr} の営業を開始しますか？`))return;
+  await set(ref(db,`bizdays/${key}`),{
+    date:dateStr, status:'open', openedAt:new Date().toISOString()
+  });
+  toast(`${dateStr} 営業開始しました`);
+  enterMainScreen(dateStr);
+};
+
+// 継続して管理画面へ
+window.continueToBizday = function(){
+  const dateStr=document.getElementById('bds-date').value||getTodayStr();
+  enterMainScreen(dateStr);
+};
+
+// 管理画面に入る（営業開始画面を閉じる）
+function enterMainScreen(dateStr){
+  sessionStorage.setItem(BIZDAY_KEY, dateStr);
+  document.getElementById('bizday-start-screen').classList.remove('show');
+  // bizdayページの日付も連動させる
+  document.getElementById('bizday-date').value=dateStr;
+  renderFloor();
+  updateSbBizday(dateStr);
+  // サイドバーの営業終了ボタンを表示
+  updateSbCloseBizdayBtn(dateStr);
+}
+
+// サイドバーの現在営業日表示を更新
+function updateSbBizday(dateStr){
+  const el=document.getElementById('sb-bizday-info');
+  if(el) el.textContent=dateStr||'—';
+}
+
+// サイドバーの営業終了ボタン表示制御
+async function updateSbCloseBizdayBtn(dateStr){
+  if(!dateStr){document.getElementById('btn-sb-close-bizday').style.display='none';return;}
+  const key=getBizdayKey(dateStr);
+  const snap=await get(ref(db,`bizdays/${key}`));
+  const biz=snap.val();
+  const btn=document.getElementById('btn-sb-close-bizday');
+  if(biz&&biz.status==='open'){
+    btn.style.display='flex';
+    btn.textContent=`🔒 営業終了（${dateStr}）`;
+  } else {
+    btn.style.display='none';
+  }
+}
+
+// サイドバーから営業終了
+window.closeBizdayFromSidebar = async function(){
+  const dateStr=sessionStorage.getItem(BIZDAY_KEY)||getTodayStr();
+  if(!confirm(`${dateStr} の営業を終了しますか？\n\n終了後は集計レポートが確認できます。`))return;
+  const key=getBizdayKey(dateStr);
+  await update(ref(db,`bizdays/${key}`),{status:'closed', closedAt:new Date().toISOString()});
+  toast(`${dateStr} 営業終了しました`);
+  document.getElementById('btn-sb-close-bizday').style.display='none';
+  // 営業日管理ページへ遷移してレポートを表示
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-bizday').classList.add('on');
+  document.querySelector('.sb-btn[onclick*="bizday"]').classList.add('on');
+  renderBizday();
+};
+
+function checkLogin(){
+  const auth=sessionStorage.getItem(LOGIN_KEY);
+  if(auth==='ok'){
+    document.getElementById('login-screen').classList.add('hidden');
+    // 既にログイン済みの場合も営業開始画面を確認
+    const savedBizday=sessionStorage.getItem(BIZDAY_KEY);
+    if(savedBizday){
+      // 前回の営業日が保存されていれば直接入室
+      enterMainScreen(savedBizday);
+    } else {
+      showBizdayStartScreen();
+    }
+  }
+}
+window.doLogin = function(){
+  const val=document.getElementById('pw-input').value;
+  const err=document.getElementById('login-error');
+  if(val===ADMIN_PASSWORD){
+    sessionStorage.setItem(LOGIN_KEY,'ok');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('pw-input').value='';
+    err.classList.remove('show');
+    // ログイン成功 → 営業開始画面へ
+    showBizdayStartScreen();
+  } else {
+    err.classList.add('show');
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+    const box=document.querySelector('.login-card');
+    box.style.animation='none'; box.offsetHeight; box.style.animation='shake .4s ease';
+  }
+};
+window.doLogout = function(){
+  if(!confirm('ログアウトしますか？'))return;
+  sessionStorage.removeItem(LOGIN_KEY);
+  sessionStorage.removeItem(BIZDAY_KEY);
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('bizday-start-screen').classList.remove('show');
+  document.getElementById('pw-input').value='';
+  document.getElementById('login-error').classList.remove('show');
+};
+window.togglePwVis = function(){
+  const inp=document.getElementById('pw-input');
+  const eye=document.getElementById('pw-eye');
+  if(inp.type==='password'){inp.type='text';eye.textContent='🙈';}
+  else{inp.type='password';eye.textContent='👁';}
+};
+const shakeStyle=document.createElement('style');
+shakeStyle.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+document.head.appendChild(shakeStyle);
+checkLogin();
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // 今日の日付をデフォルトでセット（bizday管理ページ用）
+  const ymd=getTodayStr();
+  document.getElementById('bizday-date').value=ymd;
+});
+
+function updateSbStat(){
+  const open=Object.values(getS()).filter(s=>s.status==='open').length;
+  document.getElementById('sb-stat').textContent=`オープン中: ${open}グループ`;
+}
+
+// ── FLOOR ──
+function renderFloor(){
+  const sess=getS();
+  const all=Object.values(sess).sort((a,b)=>new Date(b.openedAt)-new Date(a.openedAt));
+  const open=all.filter(s=>s.status==='open');
+  const closed=all.filter(s=>s.status==='closed').slice(0,6);
+  let html=`<div class="new-sess-card" onclick="openNewSessModal()">＋ 新しいグループを作成</div>`;
+  open.forEach(s=>{
+    const tot=getSessTotal(s.id);
+    const ffAmt=s.plan==='freeflow'?(s.ffPrice||5000):0;
+    const grandTot=tot+ffAmt;
+    const cnt=(s.orderIds||[]).length;
+    const ffBadge=getFFBadgeHTML(s);
+    html+=`<div class="sess-card open ${selSessId===s.id?'selected':''}" onclick="pickSess('${s.id}')">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div class="sc-status sc-open">● OPEN</div>
+        ${s.plan==='freeflow'?`<span style="font-size:.7rem;background:rgba(212,168,67,.12);color:var(--amber);padding:1px 7px;border-radius:6px;font-weight:700">🍹 FF</span>`:''}
+      </div>
+      <div class="sc-grp">${s.groupName}</div>
+      <div class="sc-meta">${fmtTime(s.openedAt)}〜 ／ ID: ${s.id}</div>
+      ${ffBadge?`<div style="margin:6px 0">${ffBadge}</div>`:''}
+      <div class="sc-total">¥${grandTot.toLocaleString()}</div>
+      <div class="sc-cnt">${cnt}オーダー${s.plan==='freeflow'?` ／ ${s.ffPax||1}名`:''}</div>
+    </div>`;
+  });
+  if(closed.length){
+    closed.forEach(s=>{
+      const tot=getSessTotal(s.id);
+      const ffAmt=s.plan==='freeflow'?(s.ffPrice||0):0;
+      html+=`<div class="sess-card" style="opacity:.45" onclick="pickSess('${s.id}')">
+        <div class="sc-status sc-closed">✓ CLOSED</div>
+        <div class="sc-grp">${s.groupName}</div>
+        <div class="sc-meta">${fmtTime(s.openedAt)} ／ ${s.id}</div>
+        <div class="sc-total" style="color:var(--soft)">¥${(tot+ffAmt).toLocaleString()}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('sess-grid').innerHTML=html;
+  updateSbStat();
+}
+
+function getSessTotal(sid){
+  const sess=getS();const s=sess[sid];if(!s)return 0;
+  return getO().filter(o=>(s.orderIds||[]).includes(o.id)&&o.status!=='cancelled').reduce((sum,o)=>sum+o.total,0);
+}
+
+function pickSess(id){
+  selSessId=id;oralCart={};discVal=0;
+  document.getElementById('disc-val').value='';
+  ['paypay','card','cash'].forEach(x=>document.getElementById('cp-'+x).className='po2');
+  closePay=null;
+  document.getElementById('btn-checkout').disabled=true;
+  renderFloor();
+  renderSessDetail();
+  startAdminTimer();
+  document.getElementById('sess-detail').style.display='block';
+  document.getElementById('sess-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderSessDetail(){
+  const sess=getS();const s=sess[selSessId];if(!s)return;
+  document.getElementById('sd-grp').textContent=s.groupName;
+  const planLabel=s.plan==='freeflow'?` 🍹 フリーフロー ${s.ffPax||1}名`:'';
+  document.getElementById('sd-id').textContent=`ID: ${s.id} ／ 開始: ${fmtTime(s.openedAt)}${planLabel}`;
+  updateAdminTimerDisplay(s);
+  renderSessOrders();
+  renderOralGrid();
+  renderCheckout();
+}
+
+function renderSessOrders(){
+  const sess=getS();const s=sess[selSessId];if(!s)return;
+  const orders=getO().filter(o=>(s.orderIds||[]).includes(o.id));
+  let html='',ownerT=0,tenantT=0,grandT=0;
+  orders.forEach(o=>{
+    const cancelled=o.status==='cancelled';
+    const cTotal=cancelled?0:o.total;
+    html+=`<div class="so-group">
+      <div class="so-group-hd">
+        <span>${fmtTime(o.timestamp)} <span class="bdg b-${o.status}" style="margin-left:4px">${stL(o.status)}</span> ${o.source==='staff'?'<span style="opacity:.5;font-size:.68rem">[スタッフ]</span>':''}</span>
+        <span style="font-family:'Playfair Display',serif;color:${cancelled?'var(--muted)':'var(--amber)'}">¥${o.total.toLocaleString()}</span>
+      </div>
+      ${o.items.map(i=>`<div class="so-item ${cancelled?'so-cancelled':''}"><span class="so-name">${i.name} × ${i.qty}</span><span class="so-price">¥${(i.price*i.qty).toLocaleString()}</span></div>`).join('')}
+      ${s.status==='open'&&!cancelled?`<div style="display:flex;gap:5px;padding:6px 12px;border-top:1px solid rgba(255,255,255,.04)">
+        <button class="btn btn-r btn-sm" onclick="cancelOrder('${o.id}')">キャンセル</button>
+      </div>`:''}
+    </div>`;
+    if(!cancelled){
+      o.items.forEach(i=>{
+        if(i.ownership==='owner')ownerT+=i.price*i.qty;
+        else tenantT+=i.price*i.qty;
+        grandT+=i.price*i.qty;
+      });
+    }
+  });
+  if(!html)html=`<div style="color:var(--muted);font-size:.82rem;padding:8px 0 12px">まだ注文がありません</div>`;
+  document.getElementById('sd-orders-list').innerHTML=html;
+  document.getElementById('sd-break').innerHTML=
+    `<div class="ss-bi ss-owner">🌿 オーナー ¥${ownerT.toLocaleString()}</div>
+     <div class="ss-bi ss-tenant">💜 テナント ¥${tenantT.toLocaleString()}</div>`;
+  document.getElementById('sd-subtotal').textContent=`¥${grandT.toLocaleString()}`;
+}
+
+function cancelOrder(oid){
+  if(!confirm('この注文をキャンセルしますか？'))return;
+  update(ref(db,`orders/${oid}`),{status:'cancelled'})
+    .then(()=>{ toast('注文をキャンセルしました'); });
+}
+
+// ── ORAL ORDER ──
+function renderOralGrid(){
+  const prods=getP().filter(p=>p.active);
+  const cats=['all',...new Set(prods.map(p=>p.category))];
+  document.getElementById('oral-cat-row').innerHTML=cats.map(c=>`
+    <button class="cat-tab ${c===oralCat?'on':''}" onclick="setOralCat('${c}',this)">
+      ${c==='all'?'🍹 ALL':(CE[c]||'')+' '+c}
+    </button>`).join('');
+  let filtered=prods;
+  if(oralCat!=='all')filtered=prods.filter(p=>p.category===oralCat);
+  document.getElementById('oral-grid').innerHTML=filtered.map(p=>`
+    <button class="ob ${oralCart[p.id]?'sel':''}" onclick="addOral('${p.id}')">
+      <div class="ob-name">${CE[p.category]||'✨'} ${p.name}</div>
+      <div class="ob-price">¥${p.price.toLocaleString()}</div>
+    </button>`).join('');
+  updateOralCartUI();
+}
+
+function setOralCat(c,btn){
+  oralCat=c;
+  document.querySelectorAll('#oral-cat-row .cat-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderOralGrid();
+}
+
+function setOralMode(m,btn){
+  oralMode=m;
+  document.querySelectorAll('.omtb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.getElementById('oral-grid-mode').style.display=m==='grid'?'block':'none';
+  document.getElementById('oral-search-mode').style.display=m==='search'?'block':'none';
+}
+
+function oralSearch(){
+  const q=document.getElementById('oral-search-input').value.toLowerCase();
+  const prods=getP().filter(p=>p.active&&p.name.toLowerCase().includes(q));
+  document.getElementById('oral-search-grid').innerHTML=prods.map(p=>`
+    <button class="ob ${oralCart[p.id]?'sel':''}" onclick="addOral('${p.id}')">
+      <div class="ob-name">${CE[p.category]||'✨'} ${p.name}</div>
+      <div class="ob-price">¥${p.price.toLocaleString()}</div>
+    </button>`).join('');
+}
+
+function addOral(pid){
+  oralCart[pid]=(oralCart[pid]||0)+1;
+  // Update button visuals
+  document.querySelectorAll(`#oral-grid .ob, #oral-search-grid .ob`).forEach(b=>{
+    const onclick=b.getAttribute('onclick');
+    if(onclick&&onclick.includes(`'${pid}'`))b.classList.add('sel');
+  });
+  updateOralCartUI();
+}
+function decOral(pid){
+  oralCart[pid]=Math.max(0,(oralCart[pid]||0)-1);
+  if(!oralCart[pid])delete oralCart[pid];
+  renderOralGrid();
+  if(oralMode==='search')oralSearch();
+}
+function updateOralCartUI(){
+  const prods=getP();
+  const keys=Object.keys(oralCart);
+  document.getElementById('oral-cart-list').innerHTML=keys.map(k=>{
+    const p=prods.find(x=>x.id===k);if(!p)return'';
+    return`<div class="oc-row">
+      <span class="oc-left">${p.name}</span>
+      <div class="oc-ctrl">
+        <button class="oc-btn" onclick="decOral('${k}')">−</button>
+        <span class="oc-qty">${oralCart[k]}</span>
+        <button class="oc-btn" onclick="addOral('${k}')">＋</button>
+      </div>
+      <span class="oc-price">¥${(p.price*oralCart[k]).toLocaleString()}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('btn-oral-submit').disabled=keys.length===0;
+}
+
+async function submitOral(){
+  if(!selSessId||!Object.keys(oralCart).length)return;
+  const prods=getP();
+  const keys=Object.keys(oralCart);
+  const items=keys.map(k=>{
+    const p=prods.find(x=>x.id===k);
+    return{productId:k,name:p.name,price:p.price,qty:oralCart[k],ownership:p.ownership,category:p.category};
+  });
+  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const ot=items.filter(i=>i.ownership==='owner').reduce((s,i)=>s+i.price*i.qty,0);
+  const tt=items.filter(i=>i.ownership==='tenant').reduce((s,i)=>s+i.price*i.qty,0);
+  const now=new Date();
+  const ymd=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const cnt=getO().filter(o=>o.id&&o.id.startsWith(ymd)).length;
+  const id=`${ymd}-${String(cnt+1).padStart(3,'0')}`;
+  const sess=getS()[selSessId];
+  const order={id,timestamp:now.toISOString(),sessionId:selSessId,groupName:sess.groupName,items,total,ownerTotal:ot,tenantTotal:tt,payment:'cash',status:'pending',source:'staff'};
+  await set(ref(db,`orders/${id}`), order);
+  const newIds=[...(sess.orderIds||[]), id];
+  await update(ref(db,`sessions/${selSessId}`),{orderIds:newIds});
+  oralCart={};renderOralGrid();
+  toast(`注文を追加: ${id}`);
+  document.querySelectorAll('.stab').forEach(b=>{ if(b.textContent.includes('注文')) b.click(); });
+}
+
+// ── CHECKOUT ──
+function renderCheckout(){
+  const sess=getS();const s=sess[selSessId];if(!s)return;
+  const orders=getO().filter(o=>(s.orderIds||[]).includes(o.id)&&o.status!=='cancelled');
+  let items=[],ownerT=0,tenantT=0,grandT=0;
+  orders.forEach(o=>o.items.forEach(i=>{
+    items.push(i);
+    if(i.ownership==='owner')ownerT+=i.price*i.qty;
+    else tenantT+=i.price*i.qty;
+    grandT+=i.price*i.qty;
+  }));
+  // フリーフロー料金を追加
+  const ffAmt=s.plan==='freeflow'?(s.ffPrice||5000):0;
+  const ffHtml=ffAmt>0?`
+    <div class="ss-row" style="color:var(--amber);font-weight:600">
+      <span>🍹 フリーフロー（${s.ffPax||1}名 × ¥5,000）</span>
+      <span>¥${ffAmt.toLocaleString()}</span>
+    </div>`:''
+  ;
+  document.getElementById('co-items').innerHTML=
+    items.map(i=>`<div class="ss-row"><span>${i.name} × ${i.qty}</span><span>¥${(i.price*i.qty).toLocaleString()}</span></div>`).join('')
+    + ffHtml;
+  document.getElementById('co-break').innerHTML=
+    `<div class="ss-bi ss-owner">🌿 オーナー ¥${ownerT.toLocaleString()}</div>
+     <div class="ss-bi ss-tenant">💜 テナント ¥${tenantT.toLocaleString()}</div>`;
+  document.getElementById('co-subtotal').textContent=`¥${(grandT+ffAmt).toLocaleString()}`;
+  calcDiscount();
+}
+
+function setDiscType(t,btn){
+  discType=t;
+  document.querySelectorAll('.dt-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.getElementById('disc-unit-lbl').textContent=t==='yen'?'円引き':'% OFF';
+  calcDiscount();
+}
+function calcDiscount(){
+  discVal=parseFloat(document.getElementById('disc-val').value)||0;
+  const subtotal=calcSubtotal();
+  let disc=0;
+  if(discType==='yen')disc=Math.min(discVal,subtotal);
+  else disc=Math.round(subtotal*Math.min(discVal,100)/100);
+  const final=Math.max(0,subtotal-disc);
+  document.getElementById('disc-preview').textContent=disc>0?`割引: -¥${disc.toLocaleString()} → ¥${final.toLocaleString()}`:'';
+  document.getElementById('final-total').textContent=`¥${final.toLocaleString()}`;
+}
+function clearDiscount(){discVal=0;document.getElementById('disc-val').value='';document.getElementById('disc-preview').textContent='';calcDiscount();}
+function calcSubtotal(){
+  const sess=getS();const s=sess[selSessId];if(!s)return 0;
+  const orderTotal=getO().filter(o=>(s.orderIds||[]).includes(o.id)&&o.status!=='cancelled').reduce((sum,o)=>sum+o.total,0);
+  const ffAmt=s.plan==='freeflow'?(s.ffPrice||5000):0;
+  return orderTotal+ffAmt;
+}
+function calcFinal(){
+  const sub=calcSubtotal();
+  const dv=parseFloat(document.getElementById('disc-val').value)||0;
+  let disc=0;
+  if(discType==='yen')disc=Math.min(dv,sub);
+  else disc=Math.round(sub*Math.min(dv,100)/100);
+  return Math.max(0,sub-disc);
+}
+
+function selCP(m){
+  closePay=m;
+  ['paypay','card','cash'].forEach(x=>{
+    const el=document.getElementById('cp-'+x);el.className='po2';
+    if(x===m)el.classList.add(m==='paypay'?'sp':m==='card'?'sc2':'sh');
+  });
+  document.getElementById('btn-checkout').disabled=false;
+}
+
+async function doCheckout(){
+  if(!selSessId||!closePay)return;
+  const s=getS()[selSessId];
+  if(!confirm(`${s.groupName} のお会計を完了しますか？`))return;
+  const finalAmt=calcFinal();
+  const sub=calcSubtotal();
+  const disc=sub-finalAmt;
+  // 全pending注文をpaidに
+  const updates={};
+  (s.orderIds||[]).forEach(id=>{
+    const o=getO().find(x=>x.id===id);
+    if(o&&o.status==='pending'){
+      updates[`orders/${id}/status`]='paid';
+      updates[`orders/${id}/payment`]=closePay;
+    }
+  });
+  updates[`sessions/${selSessId}/status`]='closed';
+  updates[`sessions/${selSessId}/closedAt`]=new Date().toISOString();
+  updates[`sessions/${selSessId}/closePayment`]=closePay;
+  updates[`sessions/${selSessId}/finalAmount`]=finalAmt;
+  updates[`sessions/${selSessId}/discount`]=disc;
+  await update(ref(db), updates);
+  document.getElementById('sess-detail').style.display='none';
+  selSessId=null;closePay=null;oralCart={};discVal=0;
+  renderFloor();
+  toast('お会計完了！セッションを終了しました');
+}
+
+function closeSessPanel(){
+  document.getElementById('sess-detail').style.display='none';
+  selSessId=null;oralCart={};
+  if(timerIntervalId){ clearInterval(timerIntervalId); timerIntervalId=null; }
+}
+
+// ── 領収書（PDF出力対応）────────────────────────────
+function showRyoshu(){
+  if(!selSessId)return;
+  document.getElementById('ryoshu-atena').value='';
+  document.getElementById('ryoshu-tadashi').value='';
+  document.getElementById('ryoshu-unit-session').checked=true;
+  document.getElementById('ryoshu-order-sel-wrap').style.display='none';
+  renderRyoshuPreview();
+  document.getElementById('ryoshu-modal').classList.add('show');
+}
+function closeRyoshu(){ document.getElementById('ryoshu-modal').classList.remove('show'); }
+
+function onRyoshuUnitChange(){
+  const unit=document.querySelector('input[name="ryoshu-unit"]:checked').value;
+  const wrap=document.getElementById('ryoshu-order-sel-wrap');
+  if(unit==='order'){
+    const sess=getS()[selSessId];
+    const orders=getO().filter(o=>(sess.orderIds||[]).includes(o.id)&&o.status!=='cancelled');
+    wrap.style.display='block';
+    document.getElementById('ryoshu-order-sel').innerHTML=
+      orders.map(o=>`<option value="${o.id}">${fmtTime(o.timestamp)} — ¥${o.total.toLocaleString()} (${o.id})</option>`).join('');
+  } else {
+    wrap.style.display='none';
+  }
+  renderRyoshuPreview();
+}
+
+function getRyoshuData(){
+  const unit=document.querySelector('input[name="ryoshu-unit"]:checked').value;
+  const sess=getS()[selSessId];
+  let orders, sub, final, disc;
+  if(unit==='order'){
+    const oid=document.getElementById('ryoshu-order-sel').value;
+    const o=getO().find(x=>x.id===oid);
+    orders=o?[o]:[];
+    sub=orders.reduce((s,o)=>s+o.total,0);
+    final=sub; disc=0;
+  } else {
+    orders=getO().filter(o=>(sess.orderIds||[]).includes(o.id)&&o.status!=='cancelled');
+    sub=calcSubtotal(); final=calcFinal(); disc=sub-final;
+  }
+  return {orders,sub,final,disc};
+}
+
+function renderRyoshuPreview(){
+  const sess=getS()[selSessId];if(!sess)return;
+  const atena=document.getElementById('ryoshu-atena').value.trim()||'上様';
+  const tadashi=document.getElementById('ryoshu-tadashi').value.trim()||'お飲食代として';
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  const {orders,sub,final,disc}=getRyoshuData();
+  const allItems=orders.flatMap(o=>o.items);
+
+  const html=`
+    <div style="padding:32px 36px;background:white;color:#111;font-family:'Hiragino Sans','Noto Sans JP',sans-serif;max-width:480px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:28px;padding-bottom:16px;border-bottom:3px double #333">
+        <div style="font-size:1.6rem;font-weight:700;letter-spacing:.25em;margin-bottom:6px">領　収　書</div>
+        <div style="font-size:.8rem;color:#777">${dateStr}</div>
+      </div>
+      <div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #ddd">
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-size:1.4rem;font-weight:700;border-bottom:2px solid #111;padding-bottom:3px;min-width:140px">${atena}</span>
+          <span style="font-size:1rem">　様</span>
+        </div>
+      </div>
+      <div style="text-align:center;margin-bottom:28px;padding:20px;background:#f8f8f8;border-radius:8px;border:1px solid #e0e0e0">
+        <div style="font-size:.75rem;color:#777;margin-bottom:6px;letter-spacing:.1em">お　受　取　金　額</div>
+        <div style="font-size:2.4rem;font-weight:700;letter-spacing:.04em">
+          ¥<span style="font-size:2.6rem">${final.toLocaleString()}</span>
+          <span style="font-size:.9rem;font-weight:400;color:#555">（税込）</span>
+        </div>
+      </div>
+      <div style="margin-bottom:24px">
+        <div style="font-size:.75rem;color:#777;margin-bottom:10px;letter-spacing:.05em;border-bottom:1px solid #eee;padding-bottom:6px">■ 明　細</div>
+        ${allItems.map(i=>`
+          <div style="display:flex;justify-content:space-between;padding:5px 4px;border-bottom:1px dotted #e8e8e8;font-size:.88rem">
+            <span>${i.name}　×　${i.qty}</span>
+            <span>¥${(i.price*i.qty).toLocaleString()}</span>
+          </div>`).join('')}
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ccc">
+          <div style="display:flex;justify-content:space-between;font-size:.83rem;color:#666;padding:3px 4px">
+            <span>小計</span><span>¥${sub.toLocaleString()}</span>
+          </div>
+          ${disc>0?`<div style="display:flex;justify-content:space-between;font-size:.83rem;color:#c00;padding:3px 4px">
+            <span>割引</span><span>-¥${disc.toLocaleString()}</span>
+          </div>`:''}
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;padding:6px 4px 0;border-top:1px solid #999;margin-top:4px">
+            <span>合計</span><span>¥${final.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:28px;padding:10px 14px;background:#fafafa;border-left:3px solid #bbb">
+        <span style="font-size:.8rem;color:#666">但し、</span>
+        <span style="font-size:.9rem;font-weight:600">${tadashi}</span>
+      </div>
+      <div style="text-align:right;padding-top:20px;border-top:1px solid #ddd">
+        <div style="font-size:1.2rem;font-weight:700;letter-spacing:.12em;margin-bottom:3px">JUNO</div>
+        <div style="font-size:.78rem;color:#666;margin-bottom:10px">Bar &amp; Lounge</div>
+        <div style="font-size:.72rem;color:#999">上記の通り領収いたしました</div>
+      </div>
+    </div>`;
+  document.getElementById('ryoshu-preview').innerHTML=html;
+}
+
+async function downloadRyoshuPDF(){
+  const sess=getS()[selSessId];if(!sess)return;
+  const atena=document.getElementById('ryoshu-atena').value.trim()||'上様';
+  const tadashi=document.getElementById('ryoshu-tadashi').value.trim()||'お飲食代として';
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  const {orders,sub,final,disc}=getRyoshuData();
+  const allItems=orders.flatMap(o=>o.items);
+
+  // jsPDF を動的ロード
+  if(!window.jspdf){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  // フォント設定（日本語対応のためNoto Sansを使用）
+  // jsPDFはデフォルトで日本語フォントを持たないため
+  // html2canvasを使ってHTML→画像→PDFに変換する方法を使用
+  if(!window.html2canvas){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  // 一時的なレンダリング用要素を作成
+  const temp=document.createElement('div');
+  temp.style.cssText='position:fixed;left:-9999px;top:0;width:480px;background:white;z-index:-1';
+  temp.innerHTML=document.getElementById('ryoshu-preview').innerHTML;
+  document.body.appendChild(temp);
+
+  toast('PDF生成中...');
+  try{
+    const canvas=await html2canvas(temp,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const imgData=canvas.toDataURL('image/png');
+    const pageW=doc.internal.pageSize.getWidth();
+    const pageH=doc.internal.pageSize.getHeight();
+    const imgW=pageW-20;
+    const imgH=(canvas.height*imgW)/canvas.width;
+    const x=10; const y=10;
+    doc.addImage(imgData,'PNG',x,y,imgW,Math.min(imgH,pageH-20));
+    const fn=`領収書_${atena}_${dateStr.replace(/[年月日]/g,'')}.pdf`;
+    doc.save(fn);
+    toast('PDFをダウンロードしました');
+  }catch(e){
+    toast('PDF生成に失敗しました');console.error(e);
+  }finally{
+    document.body.removeChild(temp);
+  }
+}
+
+// RECEIPT（伝票）
+function showReceipt(){
+  if(!selSessId)return;
+  const sess=getS();const s=sess[selSessId];
+  const orders=getO().filter(o=>(s.orderIds||[]).includes(o.id)&&o.status!=='cancelled');
+  const now=new Date();
+  const sub=calcSubtotal();
+  const final=calcFinal();
+  const disc=sub-final;
+  let lines=[];
+  lines.push('================================');
+  lines.push(`         BAR  伝票`);
+  lines.push(`  グループ: ${s.groupName}`);
+  lines.push(`  ${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
+  lines.push('================================');
+  orders.forEach(o=>{
+    o.items.forEach(i=>{
+      const nm=i.name.length>12?i.name.substring(0,12)+'..':i.name;
+      lines.push(`${nm.padEnd(14,' ')}× ${i.qty}  ¥${(i.price*i.qty).toLocaleString()}`);
+    });
+  });
+  lines.push('--------------------------------');
+  lines.push(`小計                 ¥${sub.toLocaleString()}`);
+  if(disc>0)lines.push(`割引                -¥${disc.toLocaleString()}`);
+  lines.push('================================');
+  lines.push(`合計                 ¥${final.toLocaleString()}`);
+  lines.push('================================');
+  lines.push('  ありがとうございました');
+  lines.push('================================');
+  document.getElementById('receipt-text').textContent=lines.join('\n');
+  document.getElementById('receipt-modal').classList.add('show');
+}
+function closeReceipt(){document.getElementById('receipt-modal').classList.remove('show');}
+function printReceipt(){window.print();}
+
+// STABS
+function switchStab(id,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.stab-content').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('.stab').forEach(b=>{if(b.textContent.includes({orders:'注文',oral:'口頭',checkout:'お会計'}[id]))b.classList.add('on');});
+  document.getElementById('stab-'+id).classList.add('on');
+  if(id==='checkout')renderCheckout();
+  if(id==='oral')renderOralGrid();
+}
+
+window.openNewSessModal = function(){
+  document.getElementById('ns-name').value='';
+  document.getElementById('new-sess-modal').classList.add('show');
+};
+window.closeNewSessModal = function(){ document.getElementById('new-sess-modal').classList.remove('show'); };
+
+async function createSess(){
+  const name=document.getElementById('ns-name').value.trim();
+  if(!name){alert('グループ名を入力してください');return;}
+  const now=new Date();
+  const ymd=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const cnt=Object.keys(getS()).filter(k=>k.startsWith(ymd)).length;
+  const id=`${ymd}-G${String(cnt+1).padStart(3,'0')}`;
+  const sess={id,groupName:name,status:'open',openedAt:now.toISOString(),orderIds:[],plan:'normal'};
+  await set(ref(db,`sessions/${id}`), sess);
+  closeNewSessModal();
+  toast(`「${name}」のセッションを開始しました`);
+  pickSess(id);
+}
+
+// ── フリーフロー追加モーダル ──────────────────────────
+let ffModalPax=2;
+window.openFFModal=function(){
+  if(!selSessId)return;
+  const sess=getS()[selSessId];
+  if(sess&&sess.plan==='freeflow'){toast('このセッションはすでにフリーフローです');return;}
+  ffModalPax=2;
+  document.getElementById('ff-modal-pax').textContent=ffModalPax;
+  document.getElementById('ff-modal-price').textContent=`¥${(ffModalPax*5000).toLocaleString()}`;
+  document.getElementById('ff-modal').classList.add('show');
+};
+window.closeFFModal=function(){document.getElementById('ff-modal').classList.remove('show');};
+window.adjFFPax=function(d){
+  ffModalPax=Math.max(1,ffModalPax+d);
+  document.getElementById('ff-modal-pax').textContent=ffModalPax;
+  document.getElementById('ff-modal-price').textContent=`¥${(ffModalPax*5000).toLocaleString()}`;
+};
+async function addFreeflow(){
+  if(!selSessId)return;
+  const now=new Date();
+  const updates={
+    [`sessions/${selSessId}/plan`]:        'freeflow',
+    [`sessions/${selSessId}/ffPax`]:       ffModalPax,
+    [`sessions/${selSessId}/ffPrice`]:     ffModalPax*5000,
+    [`sessions/${selSessId}/ffDuration`]:  120,
+    [`sessions/${selSessId}/ffStartedAt`]: now.toISOString(),
+    [`sessions/${selSessId}/ffEndsAt`]:    new Date(now.getTime()+120*60*1000).toISOString(),
+  };
+  await update(ref(db),updates);
+  closeFFModal();
+  toast(`🍹 フリーフロー開始！ ${ffModalPax}名 ¥${(ffModalPax*5000).toLocaleString()} — 2時間`);
+  renderSessDetail();
+  startAdminTimer();
+}
+
+// ── フリーフロー タイマー ─────────────────────────────
+const FF_DURATION_MS = 120 * 60 * 1000; // 2時間
+let timerIntervalId = null;
+
+function getRemainingMs(sess){
+  if(!sess||sess.plan!=='freeflow'||!sess.ffStartedAt) return null;
+  const end=new Date(sess.ffEndsAt||new Date(sess.ffStartedAt).getTime()+FF_DURATION_MS);
+  return end - new Date();
+}
+
+function formatRemaining(ms){
+  if(ms<=0) return '終了';
+  const totalSec=Math.floor(ms/1000);
+  const m=Math.floor(totalSec/60);
+  const s=totalSec%60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function getTimerClass(ms){
+  if(ms<=0) return 'expired';
+  if(ms<=10*60*1000) return 'warning'; // 残り10分以下
+  return '';
+}
+
+function startAdminTimer(){
+  if(timerIntervalId) clearInterval(timerIntervalId);
+  timerIntervalId=setInterval(()=>{
+    if(!selSessId) return;
+    const sess=getS()[selSessId];
+    if(!sess||sess.plan!=='freeflow') return;
+    updateAdminTimerDisplay(sess);
+    // floor card も更新
+    renderFloor();
+  },1000);
+}
+
+function updateAdminTimerDisplay(sess){
+  const el=document.getElementById('sd-ff-timer');
+  if(!el) return;
+  if(!sess||sess.plan!=='freeflow'||sess.status!=='open'){
+    el.style.display='none'; return;
+  }
+  const ms=getRemainingMs(sess);
+  const cls=getTimerClass(ms);
+  const pct=Math.max(0,Math.min(100,(ms/FF_DURATION_MS)*100));
+  el.style.display='block';
+  el.innerHTML=`
+    <div class="ff-timer-bar">
+      <span class="ff-timer-icon">⏱</span>
+      <span class="ff-timer-label">フリーフロー残り</span>
+      <span class="ff-timer-time ${cls}">${formatRemaining(ms)}</span>
+      <div class="ff-timer-pct">
+        <div class="ff-timer-fill ${cls}" style="width:${pct}%"></div>
+      </div>
+      <span style="font-size:.7rem;color:var(--muted)">${sess.ffPax||1}名 ¥${(sess.ffPrice||5000).toLocaleString()}</span>
+    </div>`;
+  // 終了アラート（1回だけ）
+  if(ms<=0 && !sess._ffExpiredAlerted){
+    toast('⏰ フリーフロー終了時間です！');
+    update(ref(db,`sessions/${selSessId}`),{_ffExpiredAlerted:true});
+  }
+}
+
+function getFFBadgeHTML(sess){
+  if(!sess||sess.plan!=='freeflow') return '';
+  const ms=getRemainingMs(sess);
+  const cls=ms<=0?'exp':ms<=10*60*1000?'warn':'';
+  const label=ms<=0?'終了':formatRemaining(ms);
+  return `<span class="ff-badge ${cls}">⏱ ${label}</span>`;
+}
+
+// PRODUCTS
+function renderProds(){
+  const prods=getP();const list=document.getElementById('prod-list');
+  if(!prods.length){list.innerHTML=`<div class="empty"><span class="ei">🍹</span>商品がありません</div>`;return;}
+  list.innerHTML=prods.map(p=>`
+    <div class="pr-row ${p.active?'':'pr-off'}">
+      <div class="pr-name">${CE[p.category]||'✨'} ${p.name}</div>
+      <div class="pr-cat">${p.category}</div>
+      <div class="pr-price">¥${p.price.toLocaleString()}</div>
+      <span class="bdg b-${p.ownership}">${p.ownership==='owner'?'オーナー':'テナント'}</span>
+      <div style="font-size:.72rem;color:var(--muted)">${p.active?'表示中':'非表示'}</div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        <button class="btn btn-g btn-sm" onclick="openPM('${p.id}')">編集</button>
+        <button class="btn btn-g btn-sm" onclick="toggleP('${p.id}')">${p.active?'非表示':'表示'}</button>
+        <button class="btn btn-r btn-sm" onclick="delP('${p.id}')">削除</button>
+      </div>
+    </div>`).join('');
+}
+function toggleP(id){
+  const p=getP().find(x=>x.id===id);
+  update(ref(db,`products/${id}`),{active:!p.active}).then(()=>renderProds());
+}
+function delP(id){
+  if(!confirm('削除しますか？'))return;
+  remove(ref(db,`products/${id}`)).then(()=>{ renderProds(); toast('削除しました'); });
+}
+window.openPM = function(id=null){
+  editProdId=id;
+  if(id){
+    const p=getP().find(x=>x.id===id);
+    document.getElementById('pm-title').textContent='商品を編集';
+    document.getElementById('pm-name').value=p.name;
+    document.getElementById('pm-price').value=p.price;
+    document.getElementById('pm-cat').value=p.category;
+    document.querySelector(`input[name="pm-own"][value="${p.ownership}"]`).checked=true;
+  }else{
+    document.getElementById('pm-title').textContent='商品を追加';
+    document.getElementById('pm-name').value='';
+    document.getElementById('pm-price').value='';
+    document.getElementById('pm-cat').value='ドリンク';
+    document.querySelector('input[name="pm-own"][value="owner"]').checked=true;
+  }
+  document.getElementById('pm-modal').classList.add('show');
+};
+window.closePM = function(){ document.getElementById('pm-modal').classList.remove('show'); };
+async function saveProd(){
+  const name=document.getElementById('pm-name').value.trim();
+  const price=parseInt(document.getElementById('pm-price').value);
+  const cat=document.getElementById('pm-cat').value;
+  const own=document.querySelector('input[name="pm-own"]:checked').value;
+  if(!name||isNaN(price)||price<=0){alert('名前と正しい価格を入力してください');return;}
+  const id = editProdId || ('p'+Date.now());
+  const prod = editProdId
+    ? {...getP().find(p=>p.id===editProdId), name, price, category:cat, ownership:own}
+    : {id, name, price, category:cat, ownership:own, active:true};
+  await set(ref(db,`products/${id}`), prod);
+  closePM(); renderProds();
+  toast(editProdId?'更新しました':'追加しました');
+}
+
+// SALES
+function renderSales(){
+  const from=document.getElementById('sf').value;
+  const to=document.getElementById('st').value;
+  let orders=getO().filter(o=>o.status==='paid');
+  if(from)orders=orders.filter(o=>o.timestamp>=from);
+  if(to)orders=orders.filter(o=>o.timestamp<=to+'T23:59:59');
+  const tot=orders.reduce((s,o)=>s+o.total,0);
+  const ow=orders.reduce((s,o)=>s+o.ownerTotal,0);
+  const te=orders.reduce((s,o)=>s+o.tenantTotal,0);
+  document.getElementById('sales-stats').innerHTML=`
+    <div class="sc ct" data-ico="💰"><div class="sv">¥${tot.toLocaleString()}</div><div class="sl">総売上</div></div>
+    <div class="sc co" data-ico="🌿"><div class="sv">¥${ow.toLocaleString()}</div><div class="sl">オーナー売上</div></div>
+    <div class="sc ck" data-ico="💜"><div class="sv">¥${te.toLocaleString()}</div><div class="sl">テナント売上</div></div>
+    <div class="sc cn" data-ico="📋"><div class="sv">${orders.length}</div><div class="sl">支払済件数</div></div>`;
+  const rows=orders.slice().reverse();
+  const tb=document.getElementById('sales-tb');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted)">データなし</td></tr>`;return;}
+  tb.innerHTML=rows.flatMap(o=>
+    o.items.filter(i=>salesTab==='all'||i.ownership===salesTab).map(i=>`
+      <tr>
+        <td class="mono">${o.id}</td>
+        <td style="font-size:.75rem;white-space:nowrap">${fmtDt(o.timestamp)}</td>
+        <td style="color:var(--amber);max-width:100px;overflow:hidden;text-overflow:ellipsis">${o.groupName||'—'}</td>
+        <td style="color:var(--text);font-weight:600">${i.name} × ${i.qty}</td>
+        <td><span class="bdg b-${o.payment}">${payL(o.payment)}</span></td>
+        <td><span class="bdg b-${i.ownership}">${i.ownership==='owner'?'オーナー':'テナント'}</span></td>
+        <td class="pr">¥${(i.price*i.qty).toLocaleString()}</td>
+        <td><span class="bdg b-paid">支払済</span></td>
+      </tr>`)).join('');
+}
+function setSalesTab(t,btn){salesTab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderSales();}
+
+// RANKING
+function renderRanking(){
+  const orders=getO().filter(o=>o.status!=='cancelled');
+  const cnt={},rev={};
+  orders.forEach(o=>o.items.forEach(i=>{cnt[i.productId]=(cnt[i.productId]||0)+i.qty;rev[i.productId]=(rev[i.productId]||0)+i.price*i.qty;}));
+  const data=getP().map(p=>({...p,cnt:cnt[p.id]||0,rev:rev[p.id]||0}));
+  drawRank('rk-all',[...data].sort((a,b)=>b.cnt-a.cnt),d=>d.cnt,v=>v+'件','#d4a843');
+  drawRank('rk-rev',[...data].sort((a,b)=>b.rev-a.rev),d=>d.rev,v=>'¥'+v.toLocaleString(),'#c05030');
+  drawRank('rk-owner',[...data].filter(p=>p.ownership==='owner').sort((a,b)=>b.cnt-a.cnt),d=>d.cnt,v=>v+'件','#5a9970');
+  drawRank('rk-tenant',[...data].filter(p=>p.ownership==='tenant').sort((a,b)=>b.cnt-a.cnt),d=>d.cnt,v=>v+'件','#9b72b0');
+}
+function drawRank(id,data,getV,fmt,color){
+  const el=document.getElementById(id);const top=data.slice(0,8);const max=Math.max(...top.map(getV),1);
+  if(!top.length||top.every(d=>getV(d)===0)){el.innerHTML=`<div style="color:var(--muted);text-align:center;padding:18px;font-size:.82rem">データなし</div>`;return;}
+  el.innerHTML=top.map((p,i)=>`
+    <div class="ri">
+      <div class="rm">
+        <span class="rn"><span style="color:var(--muted);margin-right:5px;font-size:.7rem">${i+1}</span>${p.name}</span>
+        <span class="rv">${fmt(getV(p))}</span>
+      </div>
+      <div class="rt"><div class="rf" style="width:${Math.max(getV(p)/max*100,2)}%;background:${color}"></div></div>
+    </div>`).join('');
+}
+
+// ORDERS
+function renderOrders(){
+  const df=document.getElementById('of').value;
+  let orders=getO();
+  if(df)orders=orders.filter(o=>o.timestamp.startsWith(df));
+  if(ordFilt!=='all')orders=orders.filter(o=>o.status===ordFilt);
+  orders=orders.slice().reverse();
+  document.getElementById('order-filter').innerHTML=
+    ['all','pending','paid','cancelled'].map(f=>`<button class="fc2 ${ordFilt===f?'on':''}" onclick="setOrdFilt('${f}',this)">${{all:'すべて',pending:'⏳未払い',paid:'✅支払済',cancelled:'❌キャンセル'}[f]}</button>`).join('');
+  const list=document.getElementById('ord-list');
+  if(!orders.length){list.innerHTML=`<div class="empty"><span class="ei">📭</span>注文がありません</div>`;return;}
+  list.innerHTML=orders.map(o=>`
+    <div class="card" style="padding:0;margin-bottom:10px">
+      <div style="padding:11px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:7px;border-bottom:1px solid var(--rim)">
+        <span class="mono">${o.id}</span>
+        <span style="font-size:.72rem;color:var(--muted);flex:1">${fmtDt(o.timestamp)} ${o.groupName?`— ${o.groupName}`:''} ${o.source==='staff'?'<span style="color:var(--soft);font-size:.68rem">[スタッフ]</span>':''}</span>
+        <span class="bdg b-${o.payment}">${payL(o.payment)}</span>
+        <span class="bdg b-${o.status}">${stL(o.status)}</span>
+        <strong style="font-family:'Playfair Display',serif;color:var(--amber);font-size:1.1rem">¥${o.total.toLocaleString()}</strong>
+      </div>
+      <div style="padding:9px 16px">
+        ${o.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)"><span style="color:var(--soft)">${i.name} × ${i.qty} <span class="bdg b-${i.ownership}" style="font-size:.65rem">${i.ownership==='owner'?'オーナー':'テナント'}</span></span><span style="color:var(--amber);font-family:'Playfair Display',serif">¥${(i.price*i.qty).toLocaleString()}</span></div>`).join('')}
+        ${o.status==='pending'?`<div style="display:flex;gap:5px;margin-top:7px">
+          <button class="btn btn-sm" style="background:rgba(90,153,112,.15);color:var(--sage);border:1px solid rgba(90,153,112,.3)" onclick="markPaid('${o.id}')">✅ 支払済</button>
+          <button class="btn btn-r btn-sm" onclick="markCancelled('${o.id}')">❌ キャンセル</button>
+        </div>`:''}
+      </div>
+    </div>`).join('');
+}
+function setOrdFilt(f,btn){ordFilt=f;renderOrders();}
+function markPaid(id){
+  update(ref(db,`orders/${id}`),{status:'paid'}).then(()=>{ renderOrders(); toast('支払済に変更しました'); });
+}
+function markCancelled(id){
+  update(ref(db,`orders/${id}`),{status:'cancelled'}).then(()=>{ renderOrders(); toast('キャンセルしました'); });
+}
+
+// ── お会計リクエスト通知 ─────────────────────────────
+function renderKaikeiNotify(pending){
+  const area=document.getElementById('kaikei-notify-area');
+  if(!area)return;
+  if(!pending.length){area.style.display='none';area.innerHTML='';return;}
+  area.style.display='block';
+  area.innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(192,80,48,.15),rgba(192,80,48,.08));border:1px solid rgba(192,80,48,.4);border-radius:var(--r);padding:14px 18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:1.1rem;animation:pulse .8s infinite alternate">💳</span>
+        <span style="font-weight:700;color:var(--rose);font-size:.95rem">お会計リクエスト　${pending.length}件</span>
+      </div>
+      ${pending.map(r=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);border-radius:10px;padding:10px 14px;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:700;color:var(--text);font-size:.9rem">👥 ${r.groupName}</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px">${fmtTime(r.requestedAt)} にリクエスト</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" style="background:rgba(90,153,98,.2);color:var(--sage);border:1px solid rgba(90,153,98,.4)" onclick="ackKaikei('${r.sessId}','goto')">
+              → セッションへ
+            </button>
+            <button class="btn btn-sm btn-r" onclick="ackKaikei('${r.sessId}','done')">
+              ✓ 対応済み
+            </button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+async function ackKaikei(sessId, action){
+  await update(ref(db,`kaikei_requests/${sessId}`),{status:'done',doneAt:new Date().toISOString()});
+  if(action==='goto'){
+    // セッション管理ページに移動してセッションを開く
+    document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+    document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+    document.getElementById('pg-floor').classList.add('on');
+    document.querySelector('.sb-btn[onclick*="floor"]').classList.add('on');
+    pickSess(sessId);
+  }
+  toast('お会計リクエストを確認しました');
+}
+function fmtDt(iso){const d=new Date(iso);return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function fmtTime(iso){const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function payL(p){return{paypay:'PayPay',card:'クレカ',cash:'現金'}[p]||p;}
+function stL(s){return{pending:'未払い',paid:'支払済',cancelled:'キャンセル'}[s]||s;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ── 営業日管理 ────────────────────────────────────────
+const KB='bp_bizdays';
+
+// Firebase営業日データをリアルタイム購読
+onValue(ref(db,'bizdays'), snap=>{
+  if(document.getElementById('pg-bizday').classList.contains('on')) renderBizday();
+});
+
+function getBizdayKey(dateStr){ return dateStr.replace(/-/g,''); }
+
+async function renderBizday(){
+  const dateStr=document.getElementById('bizday-date').value;
+  if(!dateStr){ return; }
+  const key=getBizdayKey(dateStr);
+  const snap=await get(ref(db,`bizdays/${key}`));
+  const biz=snap.val();
+
+  const statusBadge=document.getElementById('bizday-status-badge');
+  const btnOpen=document.getElementById('btn-bizday-open');
+  const btnClose=document.getElementById('btn-bizday-close');
+  const openInfo=document.getElementById('bizday-open-info');
+
+  if(!biz){
+    statusBadge.innerHTML='<span class="bizday-closed-badge">— 未開始</span>';
+    btnOpen.style.display=''; btnClose.style.display='none';
+    openInfo.style.display='none';
+    document.getElementById('bizday-report').style.display='none';
+    document.getElementById('bizday-empty').style.display='block';
+  } else if(biz.status==='open'){
+    statusBadge.innerHTML='<span class="bizday-open-badge">● 営業中</span>';
+    btnOpen.style.display='none'; btnClose.style.display='';
+    openInfo.style.display='block';
+    openInfo.textContent=`営業開始: ${fmtDt(biz.openedAt)}`;
+    document.getElementById('bizday-empty').style.display='none';
+    buildReport(dateStr, biz);
+    document.getElementById('bizday-report').style.display='block';
+  } else {
+    statusBadge.innerHTML='<span class="bizday-closed-badge">✓ 営業終了</span>';
+    btnOpen.style.display=''; btnClose.style.display='none';
+    openInfo.style.display='block';
+    openInfo.textContent=`営業: ${fmtDt(biz.openedAt)} 〜 ${fmtDt(biz.closedAt)}`;
+    document.getElementById('bizday-empty').style.display='none';
+    buildReport(dateStr, biz);
+    document.getElementById('bizday-report').style.display='block';
+  }
+}
+
+async function openBizday(){
+  const dateStr=document.getElementById('bizday-date').value;
+  if(!dateStr){alert('日付を選択してください');return;}
+  const key=getBizdayKey(dateStr);
+  const snap=await get(ref(db,`bizdays/${key}`));
+  if(snap.exists()&&snap.val().status==='open'){toast('この日の営業はすでに開始されています');return;}
+  if(!confirm(`${dateStr} の営業を開始しますか？`))return;
+  await set(ref(db,`bizdays/${key}`),{
+    date:dateStr, status:'open', openedAt:new Date().toISOString()
+  });
+  sessionStorage.setItem(BIZDAY_KEY, dateStr);
+  updateSbBizday(dateStr);
+  updateSbCloseBizdayBtn(dateStr);
+  toast(`${dateStr} 営業開始しました`);
+  renderBizday();
+}
+
+async function closeBizday(){
+  const dateStr=document.getElementById('bizday-date').value;
+  if(!confirm(`${dateStr} の営業を終了しますか？`))return;
+  const key=getBizdayKey(dateStr);
+  await update(ref(db,`bizdays/${key}`),{status:'closed', closedAt:new Date().toISOString()});
+  // セッションに保存していた営業日を削除
+  if(sessionStorage.getItem(BIZDAY_KEY)===dateStr) sessionStorage.removeItem(BIZDAY_KEY);
+  updateSbCloseBizdayBtn(dateStr);
+  toast(`${dateStr} 営業終了しました`);
+  renderBizday();
+}
+
+function buildReport(dateStr, biz){
+  const pays=['paypay','card','cash'];
+  const payNames={paypay:'PayPay',card:'クレカ',cash:'現金'};
+
+  // その日の支払済注文
+  const orders=getO().filter(o=>
+    o.status==='paid' && o.timestamp.startsWith(dateStr)
+  );
+  // その日のフリーフローセッション（終了済）
+  const ffsessions=Object.values(getS()).filter(s=>
+    s.openedAt && s.openedAt.startsWith(dateStr) &&
+    s.plan==='freeflow' && s.status==='closed'
+  );
+
+  // ── 集計構造 ──────────────────────────────────────────
+  // own側: {paypay:0, card:0, cash:0, items:{商品名:{qty,paypay,card,cash}}}
+  const agg = {
+    owner:  {paypay:0,card:0,cash:0,items:{}},
+    tenant: {paypay:0,card:0,cash:0,items:{}}
+  };
+
+  orders.forEach(o=>{
+    const p=o.payment||'cash';
+    o.items.forEach(i=>{
+      const own=i.ownership==='owner'?'owner':'tenant';
+      const sub=i.price*i.qty;
+      agg[own][p]=(agg[own][p]||0)+sub;
+      if(!agg[own].items[i.name]) agg[own].items[i.name]={qty:0,paypay:0,card:0,cash:0};
+      agg[own].items[i.name].qty+=i.qty;
+      agg[own].items[i.name][p]=(agg[own].items[i.name][p]||0)+sub;
+    });
+  });
+
+  // フリーフロー → オーナーに計上
+  ffsessions.forEach(s=>{
+    const p=s.closePayment||'cash';
+    agg.owner[p]=(agg.owner[p]||0)+(s.ffPrice||0);
+    const label=`🍹 フリーフロー（${s.ffPax||1}名）`;
+    if(!agg.owner.items[label]) agg.owner.items[label]={qty:0,paypay:0,card:0,cash:0};
+    agg.owner.items[label].qty+=(s.ffPax||1);
+    agg.owner.items[label][p]=(agg.owner.items[label][p]||0)+(s.ffPrice||0);
+  });
+
+  // ── 全体サマリー ──────────────────────────────────────
+  const ownerTotal=pays.reduce((s,p)=>s+agg.owner[p],0);
+  const tenantTotal=pays.reduce((s,p)=>s+agg.tenant[p],0);
+  const grandTotal=ownerTotal+tenantTotal;
+  document.getElementById('bizday-summary-stats').innerHTML=`
+    <div class="sc ct" data-ico="💰"><div class="sv">¥${grandTotal.toLocaleString()}</div><div class="sl">総売上</div></div>
+    <div class="sc co" data-ico="🌿"><div class="sv">¥${ownerTotal.toLocaleString()}</div><div class="sl">オーナー</div></div>
+    <div class="sc ck" data-ico="💜"><div class="sv">¥${tenantTotal.toLocaleString()}</div><div class="sl">テナント</div></div>
+    <div class="sc cn" data-ico="📋"><div class="sv">${orders.length}</div><div class="sl">注文件数</div></div>`;
+
+  // ── オーナー / テナント 共通レンダリング ───────────────
+  ['owner','tenant'].forEach(own=>{
+    const color=own==='owner'?'var(--sage)':'var(--plum)';
+    const tot=pays.reduce((s,p)=>s+agg[own][p],0);
+    document.getElementById(`${own}-total-badge`).textContent=`¥${tot.toLocaleString()}`;
+
+    // 会計手段別
+    const payRows=pays.map(p=>{
+      const v=agg[own][p]||0;
+      const pct=tot>0?Math.round(v/tot*100):0;
+      return`<div class="breakdown-row">
+        <span class="bd-label">${payNames[p]}</span>
+        <div style="flex:1;margin:0 12px">
+          <div style="height:5px;background:var(--muted);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width .6s ease"></div>
+          </div>
+        </div>
+        <span style="font-size:.75rem;color:var(--muted);min-width:32px;text-align:right">${pct}%</span>
+        <span class="bd-val" style="min-width:90px;text-align:right">¥${v.toLocaleString()}</span>
+      </div>`;
+    }).join('');
+    const totalRow=`<div class="breakdown-row total-row">
+      <span class="bd-label">合計</span>
+      <div style="flex:1"></div>
+      <span class="bd-val" style="color:${color}">¥${tot.toLocaleString()}</span>
+    </div>`;
+    document.getElementById(`${own}-pay-breakdown`).innerHTML=payRows+totalRow;
+
+    // 商品別
+    const sorted=Object.entries(agg[own].items).sort((a,b)=>{
+      const ta=pays.reduce((s,p)=>s+a[1][p],0);
+      const tb=pays.reduce((s,p)=>s+b[1][p],0);
+      return tb-ta;
+    });
+    const tb=document.getElementById(`${own}-items-tb`);
+    if(!sorted.length){
+      tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">データなし</td></tr>`;
+    } else {
+      // 小計行
+      const subtotals={paypay:0,card:0,cash:0,total:0};
+      sorted.forEach(([,d])=>{pays.forEach(p=>{subtotals[p]+=d[p]||0;subtotals.total+=d[p]||0;});});
+      tb.innerHTML=sorted.map(([name,d])=>{
+        const rowTot=pays.reduce((s,p)=>s+(d[p]||0),0);
+        return`<tr>
+          <td style="color:var(--text);font-weight:600">${name}</td>
+          <td style="text-align:center;color:var(--soft)">${d.qty}</td>
+          <td style="font-family:'Playfair Display',serif;font-weight:700;color:${color};text-align:right">¥${rowTot.toLocaleString()}</td>
+          <td style="color:var(--soft);text-align:right">${d.paypay?'¥'+d.paypay.toLocaleString():'—'}</td>
+          <td style="color:var(--soft);text-align:right">${d.card?'¥'+d.card.toLocaleString():'—'}</td>
+          <td style="color:var(--soft);text-align:right">${d.cash?'¥'+d.cash.toLocaleString():'—'}</td>
+        </tr>`;
+      }).join('')+`<tr style="background:rgba(255,255,255,.04);font-weight:700">
+        <td style="color:var(--text)">合計</td>
+        <td></td>
+        <td style="font-family:'Playfair Display',serif;color:${color};text-align:right">¥${subtotals.total.toLocaleString()}</td>
+        <td style="color:var(--text);text-align:right">${subtotals.paypay?'¥'+subtotals.paypay.toLocaleString():'—'}</td>
+        <td style="color:var(--text);text-align:right">${subtotals.card?'¥'+subtotals.card.toLocaleString():'—'}</td>
+        <td style="color:var(--text);text-align:right">${subtotals.cash?'¥'+subtotals.cash.toLocaleString():'—'}</td>
+      </tr>`;
+    }
+  });
+
+  // ── フリーフロー集計 ──────────────────────────────────
+  const ffCard=document.getElementById('bizday-ff-card');
+  if(ffsessions.length>0){
+    ffCard.style.display='block';
+    const ffTotal=ffsessions.reduce((s,x)=>s+(x.ffPrice||0),0);
+    const ffPaxTotal=ffsessions.reduce((s,x)=>s+(x.ffPax||0),0);
+    document.getElementById('bizday-ff-content').innerHTML=`
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px">
+        <div><div style="font-size:.72rem;color:var(--muted)">セッション数</div><div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--amber)">${ffsessions.length}組</div></div>
+        <div><div style="font-size:.72rem;color:var(--muted)">延べ人数</div><div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--amber)">${ffPaxTotal}名</div></div>
+        <div><div style="font-size:.72rem;color:var(--muted)">売上合計</div><div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--amber)">¥${ffTotal.toLocaleString()}</div></div>
+      </div>
+      ${ffsessions.map(s=>`
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--soft);padding:5px 0;border-bottom:1px solid var(--rim)">
+          <span>${s.groupName}</span>
+          <span>${s.ffPax}名</span>
+          <span>¥${(s.ffPrice||0).toLocaleString()}</span>
+          <span class="bdg b-${s.closePayment||'cash'}">${payNames[s.closePayment||'cash']}</span>
+        </div>`).join('')}`;
+  } else {
+    ffCard.style.display='none';
+  }
+}
+
+function printBizdayReport(){ window.print(); }
+
+// window露出（HTML onclickから呼ばれる関数）
+window.pickSess=pickSess; window.renderFloor=renderFloor;
+window.closeSessPanel=closeSessPanel; window.showReceipt=showReceipt;
+window.closeReceipt=closeReceipt; window.printReceipt=printReceipt;
+window.showRyoshu=showRyoshu; window.closeRyoshu=closeRyoshu;
+window.renderRyoshuPreview=renderRyoshuPreview; window.downloadRyoshuPDF=downloadRyoshuPDF;
+window.onRyoshuUnitChange=onRyoshuUnitChange;
+window.openFFModal=openFFModal; window.closeFFModal=closeFFModal;
+window.adjFFPax=adjFFPax; window.addFreeflow=addFreeflow;
+window.switchStab=switchStab; window.setOralMode=setOralMode;
+window.setOralCat=setOralCat; window.addOral=addOral; window.decOral=decOral;
+window.submitOral=submitOral; window.selCP=selCP; window.doCheckout=doCheckout;
+window.setDiscType=setDiscType; window.clearDiscount=clearDiscount; window.calcDiscount=calcDiscount;
+window.toggleP=toggleP; window.delP=delP; window.saveProd=saveProd;
+window.setSalesTab=setSalesTab; window.setOrdFilt=setOrdFilt;
+window.markPaid=markPaid; window.markCancelled=markCancelled;
+window.oralSearch=oralSearch; window.createSess=createSess;
+window.openBizday=openBizday; window.closeBizday=closeBizday;
+window.renderBizday=renderBizday; window.printBizdayReport=printBizdayReport;
+window.closeBizdayFromSidebar=closeBizdayFromSidebar;
+window.ackKaikei=ackKaikei;
+
+// Modal backdrops
+['new-sess-modal','pm-modal','receipt-modal','ryoshu-modal','ff-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target===this)this.classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>
